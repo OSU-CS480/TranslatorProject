@@ -1,6 +1,7 @@
 class NFA:
 	def __init__(self):
 		self._curState = 'start'
+		self._lastState = 'start'
 		self._rules = {'start': {}, 'fail': {}}
 		
 	def addState(self, id):
@@ -14,13 +15,18 @@ class NFA:
 	def read(self, c):
 		if self._curState == 'fail':
 			return
-			
+		
 		possibleTransitions = self._rules[self._curState]
 		
+		self._lastState = self._curState
 		if possibleTransitions.get(c) != None:
 			self._curState = possibleTransitions[c]
 		else:
 			self._curState = 'fail'
+	
+	def unread(self):
+		self._curState = self._lastState
+		self._lastState = 'double_unread_unknown_state'
 			
 	def inAcceptingState(self):
 		return self._curState[0:2] == "T_"
