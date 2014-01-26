@@ -1,5 +1,11 @@
 *.py[cod]
 
+# emacs backup files
+*~
+
+# regular backup files
+*.bak
+
 # C extensions
 *.so
 
