@@ -1,3 +1,11 @@
+#!/usr/bin/python
+
+# TODO: put this in some sort of util class
+#
+# goes to last character inclusive, ASCII only
+def characterList(startChar, endChar):
+    return list(map(chr, list(range(ord(startChar), ord(endChar) + 1))))
+
 class NFA:
     def __init__(self):
         self._curState = 'start'
@@ -52,6 +60,26 @@ class BinopNFA(NFA):
         self.addState('T_PLUS')
         self.addTransition('+', 'start', 'T_PLUS')
         
+        self.addState('T_MINUS')
+        self.addTransition('-', 'start', 'T_MINUS')
+        
+        self.addState('T_MULT')
+        self.addTransition('*', 'start', 'T_MULT')
+        
+        self.addState('T_DIV')
+        self.addTransition('/', 'start', 'T_DIV')
+        
+        self.addState('T_MOD')
+        self.addTransition('%', 'start', 'T_MOD')
+        
+        self.addState('T_EXP')
+        self.addTransition('^', 'start', 'T_EXP')
+        
+        self.addState('T_NOT')
+        self.addState('T_NOTEQ')
+        self.addTransition('!', 'start', 'T_NOT')
+        self.addTransition('=', 'T_NOT', 'T_NOTEQ')
+        
         self.addState('colon')
         self.addTransition(':', 'start', 'colon')
         self.addState('T_EQ')
@@ -61,6 +89,7 @@ class BinopNFA(NFA):
         self.addState('T_LTEQ')
         self.addTransition('<', 'start', 'T_LT')
         self.addTransition('=', 'T_LT', 'T_LTEQ')
+        self.addTransition('>', 'T_LT', 'T_NOTEQ')
         
         self.addState('T_GT')
         self.addState('T_GTEQ')
@@ -100,7 +129,7 @@ class StringConstNFA(NFA):
         self.addTransition('\\', 'regular_char', 'backslash_delim')
         
         # stay in regular_char with any character except " or \
-        allowedChars = list(map(chr, list(range(ord(' '), ord('~') + 1))))
+        allowedChars = characterList(' ', '~')
         del allowedChars[ord('\\') - ord(' ')]
         del allowedChars[ord('"') - ord(' ')]
         
@@ -109,6 +138,21 @@ class StringConstNFA(NFA):
             
         for c in ['\\', '"', 'b', 'n', 't']:
             self.addTransition(c, 'backslash_delim', 'regular_char')
+            
+class IdentifierNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        
+        self.addState('T_ID')
+        
+        allowedInIds = characterList('A', 'Z') + characterList('a', 'z') + [ord('_')]
+        for c in allowedInIds:
+            self.addTransition(c, 'start', 'T_ID')
+            self.addTransition(c, 'T_ID', 'T_ID')
+            
+         # can't start with a number
+        for c in characterList('0', '9'):
+            self.addTransition(c, 'T_ID', 'T_ID')
 
 class Tokenizer:
     def __init__(self, file_str):
@@ -116,7 +160,7 @@ class Tokenizer:
         self._tokens = []
         
         # NOTE: set order of NFAs to precedence desired (typesNFA before identifierNFA, etc)
-        self._nfas = [BinopNFA(), IntegerNFA(), StringConstNFA()]
+        self._nfas = [IntegerNFA(), BinopNFA(), StringConstNFA(), IdentifierNFA()]
         
     def resetNFAs(self):
         for nfa in self._nfas:
