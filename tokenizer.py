@@ -129,7 +129,7 @@ class Tokenizer:
 	# advance current token to next non-whitespace character
 	def skipToNextToken(self, idx):
 		i = idx
-		while i < len(self._file_str) and (self._file_str[i] == ' ' or self._file_str[i] == '\t' or self._file_str[i] == '\n'):
+		while i < len(self._file_str) and (self._file_str[i] in [' ', '\t', '\n', '\r']):
 			i += 1
 			
 		if i >= len(self._file_str):
