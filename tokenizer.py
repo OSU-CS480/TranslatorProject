@@ -139,6 +139,7 @@ class Tokenizer:
                 
     def tokenize(self):
         i = 0
+        i = self.skipToNextToken(i)
         while i < len(self._file_str):
             c = self._file_str[i]
                 
@@ -156,7 +157,6 @@ class Tokenizer:
                     
             # did this new char cause all NFAs to fail?
             if failedNFAs == len(self._nfas):
-                #print("all nfas failed")
                 # unread this char from all NFAs, look for the first NFA to accept and declare that the token
                 
                 self.unreadNFAs()
