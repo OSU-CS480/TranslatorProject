@@ -31,8 +31,15 @@ class NFA:
 	def inAcceptingState(self):
 		return self._curState[0:2] == "T_"
 		
+	def inFailState(self):
+		return self._curState == 'fail'
+		
+	def inStartState(self):
+		return self._curState == 'start'
+		
 	def reset(self):
 		self._curState = 'start'
+		self._lastState = 'start'
 		
 	def __str__(self):
 		return self._curState
@@ -100,64 +107,96 @@ class StringConstNFA(NFA):
 		for c in allowedChars:
 			self.addTransition(c, 'regular_char', 'regular_char')
 			
-		for c in ['\\', 'b', 'n', 't']:
+		for c in ['\\', '"', 'b', 'n', 't']:
 			self.addTransition(c, 'backslash_delim', 'regular_char')
 
 class Tokenizer:
 	def __init__(self, file_str):
 		self._file_str = file_str
+		self._tokens = []
 		
 		# NOTE: set order of NFAs to precedence desired (typesNFA before identifierNFA, etc)
 		self._nfas = [BinopNFA(), IntegerNFA(), StringConstNFA()]
 		
-	# see which NFAs accepted
-	def checkCompletedToken(self):
-		inAnyState = False
+	def resetNFAs(self):
 		for nfa in self._nfas:
-			if nfa.inAcceptingState():
-			
-				if not inAnyState:
-					print(nfa)
-					
-				inAnyState = True # already have determined this lexeme
 			nfa.reset()
-						
-		if not inAnyState:
-			print("Invalid, last in: %s" % nfa)
+			
+	def unreadNFAs(self):
+		for nfa in self._nfas:
+			nfa.unread()
+
+	# advance current token to next non-whitespace character
+	def skipToNextToken(self, idx):
+		i = idx
+		while i < len(self._file_str) and (self._file_str[i] == ' ' or self._file_str[i] == '\t' or self._file_str[i] == '\n'):
+			i += 1
+			
+		if i >= len(self._file_str):
+			return -1
+		else:
+			return i
 				
-	def start(self):
-		#for c in self._file_str:
+	def tokenize(self):
 		i = 0
 		while i < len(self._file_str):
 			c = self._file_str[i]
-			
-			if i == len(self._file_str) - 1: # EOF
-				if c != ' ' or c != '\t' or c != '\n':
-					for nfa in self._nfas:
-						nfa.read(c)
-				break
-			
-			if c == ' ' or c == '\t' or c == '\n': # consume all whitespaces to the whitespace right before the next token
-				while(self._file_str[i + 1] == ' ' or \
-				self._file_str[i + 1] == '\t' or \
-				self._file_str[i + 1] == '\n'):
-					if i == len(self._file_str) - 1:
-						break
-					i += 1
+				
+			# read the current character
+			failedNFAs = 0
+			acceptingNFAs = 0
+			for nfa in self._nfas:
+				nfa.read(c)
+				
+				if nfa.inFailState():
+					failedNFAs += 1
 					
-				# read all NFAs for Accept state
-				# consume white space and manually continue
+				if nfa.inAcceptingState():
+					acceptingNFAs += 1
+					
+			# did this new char cause all NFAs to fail?
+			if failedNFAs == len(self._nfas):
+				#print("all nfas failed")
+				# unread this char from all NFAs, look for the first NFA to accept and declare that the token
 				
-				self.checkCompletedToken()
+				self.unreadNFAs()
 				
-			else:
-				# lex the next character
+				# see if any accept after the unread
+				found = False
 				for nfa in self._nfas:
-					nfa.read(c)
-			i += 1
+					# only use the first accepting NFA
+					if nfa.inAcceptingState() and not found:
+						found = True
+						self._tokens.append(str(nfa))
+					
+					nfa.reset()
+						
+				if not found:
+					self._tokens.append("T_INVALID")
+				
+				# skip to the next possible token
+				i = self.skipToNextToken(i + 1)
+				if i < 0:
+					break
+			else:
+				# at least one NFA still accepting, continue
+				i += 1
 		
-		# done reading the file, see which NFAs are finalized
-		self.checkCompletedToken()
+		# done reading input, see if any of the NFAs are accepting
+		
+		inStartState = 0
+		for nfa in self._nfas:
+			if nfa.inStartState():
+				inStartState += 1
+			elif nfa.inAcceptingState():
+				self._tokens.append(str(nfa))
+				return self._tokens
+				
+		if inStartState != len(self._nfas):
+			# some extra not fully formed token exists, emit error
+			self._tokens.append("T_INVALID")
+			
+		return self._tokens
 		
 def main():
 	import sys
@@ -167,7 +206,10 @@ def main():
 	else:
 		f = open(sys.argv[1], "r")
 		t = Tokenizer(f.read())
-		t.start()
+		toks = t.tokenize()
+		
+		for tok in toks:
+			print(tok)
 		
 if __name__ == "__main__":
 	main()
