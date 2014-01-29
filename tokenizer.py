@@ -10,7 +10,7 @@ class NFA:
     def __init__(self):
         self._curState = 'start'
         self._lastState = 'start'
-        self._rules = {'start': {}, 'fail': {}}
+        self._rules = {'start': {}, 'fail': {}, 'blackhole': {}}
         
     def addState(self, id):
         self._rules[id] = {}
@@ -33,14 +33,21 @@ class NFA:
             self._curState = 'fail'
     
     def unread(self):
-        self._curState = self._lastState
-        self._lastState = 'double_unread_unknown_state'
+        if self._curState == 'blackhole':
+            #print("unreading a blackhole")
+            return
+        else:
+            self._curState = self._lastState
+            self._lastState = 'double_unread_unknown_state'
             
     def inAcceptingState(self):
         return self._curState[0:2] == "T_"
+
+    def inBlackhole(self):
+        return self._curState == 'blackhole'
         
     def inFailState(self):
-        return self._curState == 'fail'
+        return self._curState == 'fail' or self._curState == 'blackhole'
         
     def inStartState(self):
         return self._curState == 'start'
@@ -116,6 +123,12 @@ class IntegerNFA(NFA):
             self.addTransition(str(i), 'is_negative', 'T_INT')
             self.addTransition(str(i), 'T_INT', 'T_INT')
 
+        for i in characterList('a', 'z'):
+            self.addTransition(i, 'T_INT', 'blackhole')
+            
+        for i in characterList('A', 'Z'):
+            self.addTransition(i, 'T_INT', 'blackhole')
+
 class StringConstNFA(NFA):
     def __init__(self):
         NFA.__init__(self)
@@ -180,6 +193,13 @@ class Tokenizer:
             return -1
         else:
             return i
+
+    def skipOverToNextToken(self, idx):
+        i = idx
+        while i < len(self._file_str) and (self._file_str[i] not in [' ', '\t', '\n', '\r']):
+            i += 1
+
+        return self.skipToNextToken(i)
                 
     def tokenize(self):
         i = 0
@@ -207,16 +227,24 @@ class Tokenizer:
                 
                 # see if any accept after the unread
                 found = False
+                foundBlackhole = False
                 for nfa in self._nfas:
                     # only use the first accepting NFA
                     if nfa.inAcceptingState() and not found:
                         found = True
                         self._tokens.append(str(nfa))
+
+                    if nfa.inBlackhole():
+                        foundBlackhole = True
                     
                     nfa.reset()
                         
                 if not found:
                     self._tokens.append("T_INVALID")
+
+                if foundBlackhole:
+                    #print("skipping!!")
+                    i = self.skipOverToNextToken(i + 1)
                 
                 # skip to the next possible token
                 i = self.skipToNextToken(i + 1)

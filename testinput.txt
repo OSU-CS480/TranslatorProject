@@ -1,2 +1,3 @@
  : + =          + := 
-> > 		>= <= or 9 29393 387282 0000 -31838 "hello" "hello\nworld" "  " "" hel9lo 99notAnIdentifier
+> > 		>= <= or 9 29393 387282 0000 -31838 "hello" "hello\nworld" "  " ""  99NotAllowed
+
