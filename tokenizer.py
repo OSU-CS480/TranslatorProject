@@ -193,13 +193,6 @@ class Tokenizer:
             return -1
         else:
             return i
-
-    def skipOverToNextToken(self, idx):
-        i = idx
-        while i < len(self._file_str) and (self._file_str[i] not in [' ', '\t', '\n', '\r']):
-            i += 1
-
-        return self.skipToNextToken(i)
                 
     def tokenize(self):
         i = 0
@@ -241,10 +234,6 @@ class Tokenizer:
                         
                 if not found:
                     self._tokens.append("T_INVALID")
-
-                if foundBlackhole:
-                    #print("skipping!!")
-                    i = self.skipOverToNextToken(i + 1)
                 
                 # skip to the next possible token
                 i = self.skipToNextToken(i + 1)
