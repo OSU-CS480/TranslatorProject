@@ -22,6 +22,7 @@ class NFA:
     # modified the state based on the current character
     def read(self, c):
         if self._curState == 'fail':
+            self._lastState = 'fail'
             return
         
         possibleTransitions = self._rules[self._curState]
@@ -34,7 +35,6 @@ class NFA:
     
     def unread(self):
         if self._curState == 'blackhole':
-            #print("unreading a blackhole")
             return
         else:
             self._curState = self._lastState
@@ -182,6 +182,12 @@ class Tokenizer:
     def unreadNFAs(self):
         for nfa in self._nfas:
             nfa.unread()
+            
+    def endOfToken(self, i):
+        if len(self._file_str) - 1 == i:
+            return True
+        else:
+            return self._file_str[i + 1] in [' ', '\t', '\n', '\r']
 
     # advance current token to next non-whitespace character
     def skipToNextToken(self, idx):
@@ -189,7 +195,14 @@ class Tokenizer:
         while i < len(self._file_str) and (self._file_str[i] in [' ', '\t', '\n', '\r']):
             i += 1
             
-        if i >= len(self._file_str):
+        return i
+            
+    def skipOverToken(self, idx):
+        i = idx
+        while i < len(self._file_str) and (self._file_str[i] not in [' ', '\t', '\n', '\r']):
+            i += 1
+            
+        if i == len(self._file_str) - 1:
             return -1
         else:
             return i
@@ -211,7 +224,7 @@ class Tokenizer:
                     
                 if nfa.inAcceptingState():
                     acceptingNFAs += 1
-                    
+
             # did this new char cause all NFAs to fail?
             if failedNFAs == len(self._nfas):
                 # unread this char from all NFAs, look for the first NFA to accept and declare that the token
@@ -229,16 +242,19 @@ class Tokenizer:
 
                     if nfa.inBlackhole():
                         foundBlackhole = True
-                    
-                    nfa.reset()
-                        
+
                 if not found:
                     self._tokens.append("T_INVALID")
+                    return self._tokens
                 
                 # skip to the next possible token
                 i = self.skipToNextToken(i + 1)
-                if i < 0:
-                    break
+                self.resetNFAs()
+                
+                if not found:
+                    i = self.skipOverToken(i + 1)
+                    if i < 0:
+                        break
             else:
                 # at least one NFA still accepting, continue
                 i += 1
