@@ -247,6 +247,7 @@ class Tokenizer:
                 i = self.skipToNextToken(i + 1)
                 self.resetNFAs()
                 
+                # done with this token, skip until the next whitespace
                 if not found:
                     i = self.skipOverToken(i + 1)
                     if i < 0:
