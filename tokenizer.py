@@ -233,15 +233,11 @@ class Tokenizer:
                 
                 # see if any accept after the unread
                 found = False
-                foundBlackhole = False
                 for nfa in self._nfas:
                     # only use the first accepting NFA
                     if nfa.inAcceptingState() and not found:
                         found = True
                         self._tokens.append(str(nfa))
-
-                    if nfa.inBlackhole():
-                        foundBlackhole = True
 
                 if not found:
                     self._tokens.append("T_INVALID")
