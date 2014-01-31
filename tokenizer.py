@@ -14,6 +14,17 @@ class NFA:
         
     def addState(self, id):
         self._rules[id] = {}
+        
+    def addAcceptingString(self, str, tokenName):
+        for c in str[:-1]:
+            self.addState(c)
+            
+        self.addState(tokenName)
+        
+        beginningStates = ['start'] + list(str)
+        endingStates = list(str[:-1]) + [tokenName]
+        for i in range(0, len(str)):
+            self.addTransition(str[i], beginningStates[i], endingStates[i])
                 
     def addTransition(self, c, idFrom, idTo):
         if self._rules.get(idFrom) != None and self._rules.get(idTo) != None:
@@ -58,7 +69,14 @@ class NFA:
         
     def __str__(self):
         return self._curState
-
+        
+class KeywordNFA(NFA):
+    def __init__(self, keyword):
+        NFA.__init__(self)
+        self._keyword = keyword
+        self.addAcceptingString(keyword, 'T_%s' % keyword.upper())
+        
+    
 class BinopNFA(NFA):
     def __init__(self):
         NFA.__init__(self)
@@ -101,12 +119,6 @@ class BinopNFA(NFA):
         self.addState('T_GTEQ')
         self.addTransition('>', 'start', 'T_GT')
         self.addTransition('=', 'T_GT', 'T_GTEQ')
-        
-        # TODO: add simply way to add states for strings
-        self.addState('o')
-        self.addState('T_OR')
-        self.addTransition('o', 'start', 'o')
-        self.addTransition('r', 'o', 'T_OR')
 
 class IntegerNFA(NFA):
     def __init__(self):
@@ -127,8 +139,6 @@ class IntegerNFA(NFA):
             
         for i in characterList('A', 'Z'):
             self.addTransition(i, 'T_INT', 'blackhole')
-
-        self.addTransition('.', 'T_INT', 'blackhole')
 
 class StringConstNFA(NFA):
     def __init__(self):
@@ -200,7 +210,16 @@ class Tokenizer:
         self._tokens = []
         
         # NOTE: set order of NFAs to precedence desired (typesNFA before identifierNFA, etc)
-        self._nfas = [IntegerNFA(), BinopNFA(), StringConstNFA(), IdentifierNFA(), FloatNFA()]
+        
+        # these are all of the NFAs that are comprised of only a single keyword
+        self._keywords = ['string', 'float', 'int', 'bool', 'while', 'if', 'else', 'true', 'false', 'stdout', 'let', 'tan', 'cos', 'sin', 'not', 'and', 'or']
+        
+        self._single_keyword_nfas = []
+        for key in self._keywords:
+            self._single_keyword_nfas.append(KeywordNFA(key))
+            
+        # the list of all NFAs
+        self._nfas = [IntegerNFA()] + self._single_keyword_nfas + [BinopNFA(), ExpressionNFA(), StringConstNFA(), IdentifierNFA()]
         
     def resetNFAs(self):
         for nfa in self._nfas:
