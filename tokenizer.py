@@ -14,6 +14,17 @@ class NFA:
         
     def addState(self, id):
         self._rules[id] = {}
+        
+    def addAcceptingString(self, str, tokenName):
+        for c in str[:-1]:
+            self.addState(c)
+            
+        self.addState(tokenName)
+        
+        beginningStates = ['start'] + list(str)
+        endingStates = list(str[:-1]) + [tokenName]
+        for i in range(0, len(str)):
+            self.addTransition(str[i], beginningStates[i], endingStates[i])
                 
     def addTransition(self, c, idFrom, idTo):
         if self._rules.get(idFrom) != None and self._rules.get(idTo) != None:
@@ -103,12 +114,76 @@ class BinopNFA(NFA):
         self.addTransition('>', 'start', 'T_GT')
         self.addTransition('=', 'T_GT', 'T_GTEQ')
         
-        # TODO: add simply way to add states for strings
-        self.addState('o')
-        self.addState('T_OR')
-        self.addTransition('o', 'start', 'o')
-        self.addTransition('r', 'o', 'T_OR')
+class OrBinop(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('or', 'T_OR')
+        
+class AndBinop(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('and', 'T_AND')
 
+class NotUnop(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('not', 'T_NOT')
+
+class SinUnop(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('sin', 'T_SIN')
+        
+class CosUnop(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('cos', 'T_COS')
+        
+class TanUnop(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('tan', 'T_TAN')
+
+class LetNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('let', 'T_LET')
+        
+class StdoutNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('stdout', 'T_STDOUT')
+        
+class IfNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('if', 'T_IF')
+        
+class WhileNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('while', 'T_WHILE')
+        
+class BoolTypeNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('bool', 'T_BOOLTYPE')
+        
+class IntTypeNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('int', 'T_INTTYPE')
+        
+class FloatTypeNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('float', 'T_FLOATTYPE')
+        
+class StringTypeNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        self.addAcceptingString('string', 'T_STRINGTYPE')
+        
 class IntegerNFA(NFA):
     def __init__(self):
         NFA.__init__(self)
@@ -166,6 +241,16 @@ class IdentifierNFA(NFA):
          # can't start with a number
         for c in characterList('0', '9'):
             self.addTransition(c, 'T_ID', 'T_ID')
+            
+class ExpressionNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        
+        self.addState('T_RPAREN')
+        self.addState('T_LPAREN')
+        
+        self.addTransition('[', 'start', 'T_LPAREN')
+        self.addTransition(']', 'start', 'T_RPAREN')
 
 class Tokenizer:
     def __init__(self, file_str):
@@ -173,7 +258,10 @@ class Tokenizer:
         self._tokens = []
         
         # NOTE: set order of NFAs to precedence desired (typesNFA before identifierNFA, etc)
-        self._nfas = [IntegerNFA(), BinopNFA(), StringConstNFA(), IdentifierNFA()]
+        
+        # these are all of the NFAs that are comprised of only a single keyword
+        self._single_keyword_nfas = [StringTypeNFA(), FloatTypeNFA(), IntTypeNFA(), BoolTypeNFA(), WhileNFA(), IfNFA(), StdoutNFA(), LetNFA(), TanUnop(), CosUnop(), SinUnop(), NotUnop(), AndBinop(), OrBinop()]
+        self._nfas = [IntegerNFA()] + self._single_keyword_nfas + [BinopNFA(), ExpressionNFA(), StringConstNFA(), IdentifierNFA()]
         
     def resetNFAs(self):
         for nfa in self._nfas:
