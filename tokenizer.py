@@ -178,6 +178,16 @@ class IdentifierNFA(NFA):
         for c in characterList('0', '9'):
             self.addTransition(c, 'T_ID', 'T_ID')
 
+class ExpressionNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+        
+        self.addState('T_RPAREN')
+        self.addState('T_LPAREN')
+        
+        self.addTransition('[', 'start', 'T_LPAREN')
+        self.addTransition(']', 'start', 'T_RPAREN')
+
 class FloatNFA(NFA):
     def __init__(self):
         NFA.__init__(self)
