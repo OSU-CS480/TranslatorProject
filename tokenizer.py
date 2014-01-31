@@ -70,6 +70,12 @@ class NFA:
     def __str__(self):
         return self._curState
         
+class KeywordNFA(NFA):
+    def __init__(self, keyword):
+        NFA.__init__(self)
+        self._keyword = keyword
+        self.addAcceptingString(keyword, 'T_%s' % keyword.upper())
+        
     
 class BinopNFA(NFA):
     def __init__(self):
@@ -113,76 +119,6 @@ class BinopNFA(NFA):
         self.addState('T_GTEQ')
         self.addTransition('>', 'start', 'T_GT')
         self.addTransition('=', 'T_GT', 'T_GTEQ')
-        
-class OrBinop(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('or', 'T_OR')
-        
-class AndBinop(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('and', 'T_AND')
-
-class NotUnop(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('not', 'T_NOT')
-
-class SinUnop(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('sin', 'T_SIN')
-        
-class CosUnop(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('cos', 'T_COS')
-        
-class TanUnop(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('tan', 'T_TAN')
-
-class LetNFA(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('let', 'T_LET')
-        
-class StdoutNFA(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('stdout', 'T_STDOUT')
-        
-class IfNFA(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('if', 'T_IF')
-        
-class WhileNFA(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('while', 'T_WHILE')
-        
-class BoolTypeNFA(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('bool', 'T_BOOLTYPE')
-        
-class IntTypeNFA(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('int', 'T_INTTYPE')
-        
-class FloatTypeNFA(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('float', 'T_FLOATTYPE')
-        
-class StringTypeNFA(NFA):
-    def __init__(self):
-        NFA.__init__(self)
-        self.addAcceptingString('string', 'T_STRINGTYPE')
         
 class IntegerNFA(NFA):
     def __init__(self):
@@ -260,7 +196,13 @@ class Tokenizer:
         # NOTE: set order of NFAs to precedence desired (typesNFA before identifierNFA, etc)
         
         # these are all of the NFAs that are comprised of only a single keyword
-        self._single_keyword_nfas = [StringTypeNFA(), FloatTypeNFA(), IntTypeNFA(), BoolTypeNFA(), WhileNFA(), IfNFA(), StdoutNFA(), LetNFA(), TanUnop(), CosUnop(), SinUnop(), NotUnop(), AndBinop(), OrBinop()]
+        self._keywords = ['string', 'float', 'int', 'bool', 'while', 'if', 'else', 'true', 'false', 'stdout', 'let', 'tan', 'cos', 'sin', 'not', 'and', 'or']
+        
+        self._single_keyword_nfas = []
+        for key in self._keywords:
+            self._single_keyword_nfas.append(KeywordNFA(key))
+            
+        # the list of all NFAs
         self._nfas = [IntegerNFA()] + self._single_keyword_nfas + [BinopNFA(), ExpressionNFA(), StringConstNFA(), IdentifierNFA()]
         
     def resetNFAs(self):
