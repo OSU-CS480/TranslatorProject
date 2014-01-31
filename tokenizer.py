@@ -58,8 +58,7 @@ class NFA:
         
     def __str__(self):
         return self._curState
-        
-    
+
 class BinopNFA(NFA):
     def __init__(self):
         NFA.__init__(self)
@@ -129,6 +128,8 @@ class IntegerNFA(NFA):
         for i in characterList('A', 'Z'):
             self.addTransition(i, 'T_INT', 'blackhole')
 
+        self.addTransition('.', 'T_INT', 'blackhole')
+
 class StringConstNFA(NFA):
     def __init__(self):
         NFA.__init__(self)
@@ -167,13 +168,39 @@ class IdentifierNFA(NFA):
         for c in characterList('0', '9'):
             self.addTransition(c, 'T_ID', 'T_ID')
 
+class FloatNFA(NFA):
+    def __init__(self):
+        NFA.__init__(self)
+
+        self.addState('LeftFloat')
+
+        for c in characterList('0', '9'):
+            self.addTransition(c, 'start', 'LeftFloat')
+
+        for c in characterList('0', '9'):
+            self.addTransition(c, 'LeftFloat', 'LeftFloat')
+
+        self.addState('T_FLOAT')
+        self.addTransition('.', 'LeftFloat', 'T_FLOAT')
+
+        for c in characterList('0', '9'):
+            self.addTransition(c, 'T_FLOAT', 'T_FLOAT')
+
+        self.addTransition('.', 'T_FLOAT', 'blackhole')
+
+        for i in characterList('a', 'z'):
+            self.addTransition(i, 'T_FLOAT', 'blackhole')
+            
+        for i in characterList('A', 'Z'):
+            self.addTransition(i, 'T_FLOAT', 'blackhole')
+
 class Tokenizer:
     def __init__(self, file_str):
         self._file_str = file_str
         self._tokens = []
         
         # NOTE: set order of NFAs to precedence desired (typesNFA before identifierNFA, etc)
-        self._nfas = [IntegerNFA(), BinopNFA(), StringConstNFA(), IdentifierNFA()]
+        self._nfas = [IntegerNFA(), BinopNFA(), StringConstNFA(), IdentifierNFA(), FloatNFA()]
         
     def resetNFAs(self):
         for nfa in self._nfas:
