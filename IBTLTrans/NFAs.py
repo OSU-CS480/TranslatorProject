@@ -1,6 +1,9 @@
 from IBTLTrans.NFA import NFA
 from IBTLTrans.Utils import Utils
 
+notAllowedInIds = Utils.Utils.characterList('"', '\'') + [',', '/', ':', ';', '?', '@', '\\', '`', '~', '|', '{', '}']
+notAllowedInNums = ['!', '_'] + notAllowedInIds
+
 class ExpressionNFA(NFA):
     def __init__(self):
         NFA.__init__(self)
@@ -80,6 +83,9 @@ class FloatNFA(NFA):
         for i in Utils.Utils.characterList('A', 'Z'):
             self.addTransition(i, 'T_FLOAT', 'blackhole')
 
+        for c in notAllowedInNums:
+            self.addTransition(c, 'T_FLOAT', 'blackhole')
+
 class IdentifierNFA(NFA):
     def __init__(self):
         NFA.__init__(self)
@@ -96,6 +102,9 @@ class IdentifierNFA(NFA):
             self.addTransition(c, 'T_ID', 'T_ID')
 
         self.addTransition('.', 'T_ID', 'blackhole')
+
+        for c in notAllowedInIds:
+            self.addTransition(c, 'T_ID', 'blackhole')
 
 class IntegerNFA(NFA):
     def __init__(self):
@@ -116,6 +125,9 @@ class IntegerNFA(NFA):
             
         for i in Utils.Utils.characterList('A', 'Z'):
             self.addTransition(i, 'T_INT', 'blackhole')
+
+        for c in notAllowedInNums:
+            self.addTransition(c, 'T_INT', 'blackhole')
 
 class KeywordNFA(NFA):
     def __init__(self, keyword):
