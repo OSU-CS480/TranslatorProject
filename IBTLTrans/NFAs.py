@@ -141,5 +141,5 @@ class StringConstNFA(NFA):
         for c in allowedChars:
             self.addTransition(c, 'regular_char', 'regular_char')
             
-        for c in ['\\', '"', 'b', 'n', 't']:
+        for c in ['\\', '"', 'b', 'n', 't', 'r']:
             self.addTransition(c, 'backslash_delim', 'regular_char')
