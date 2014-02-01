@@ -16,7 +16,7 @@ class Tokenizer:
             self._single_keyword_nfas.append(KeywordNFA(key))
             
         # the list of all NFAs
-        self._nfas = [IntegerNFA()] + self._single_keyword_nfas + [BinopNFA(), ExpressionNFA(), StringConstNFA(), IdentifierNFA()]
+        self._nfas = [IntegerNFA(), FloatNFA()] + self._single_keyword_nfas + [BinopNFA(), ExpressionNFA(), StringConstNFA(), IdentifierNFA()]
         
     def resetNFAs(self):
         for nfa in self._nfas:
@@ -87,12 +87,12 @@ class Tokenizer:
                     return self._tokens
                 
                 # skip to the next possible token
-                i = self.skipToNextToken(i + 1)
+                i = self.skipToNextToken(i)
                 self.resetNFAs()
                 
                 # done with this token, skip until the next whitespace
                 if not found:
-                    i = self.skipOverToken(i + 1)
+                    i = self.skipOverToken(i)
                     if i < 0:
                         break
             else:

@@ -26,6 +26,24 @@ def main():
                 print("Missing an answer file (.ans) or input file (.txt)")
             else:
                 from IBTLTrans.Stages.Tokenizer import Tokenizer
+                
+                # run failure test first
+                failureTestFile = open(os.sep.join([topLevelDir, testingDir, name, testDataDir, 'failure_tests']), 'r')
+                badTokens = failureTestFile.read().split('~')
+
+                print("Starting failure test for bad tokens")
+                count = 0
+                countInvalid = 0
+                for tok in badTokens:
+                    t = Tokenizer(tok)
+                    ans = t.tokenize()
+                    count += 1
+
+                    if ans[0] != 'T_INVALID':
+                        print("Expected T_INVALID on `%s', got %s" % (tok, ans))
+                        countInvalid += 1
+
+                print("Failure test completed. Of %d tokens %d were marked incorrectly\n" % (count, countInvalid))
 
                 for i in range(0, len(inputFiles)):
                     # tokenize input
@@ -42,7 +60,7 @@ def main():
                     answerFile.close()
 
                     # compare
-                    # lenghts are not necessarily the same
+                    # lengths are not necessarily the same
                     # the input file could have some extra tokens after 
                     # an invalid token
 
@@ -52,7 +70,6 @@ def main():
                         if tokens[i] != answers[i]:
                             print("Mismatched token %d: got %s, correct %s" % (i, tokens[i], answers[i]))
                             failed = True
-                            break
                         else:
                             print("Matched token %d: %s" % (i, tokens[i]))
 
@@ -60,9 +77,9 @@ def main():
                                 break
 
                     if not failed:
-                        print("Test fixture succeeded")
+                        print("Test fixture succeeded\n")
                     else:
-                        print("Test fixture failed")
+                        print("Test fixture failed\n")
                 print("Test suite complete")
 if __name__ == "__main__":
     main()

@@ -91,9 +91,11 @@ class IdentifierNFA(NFA):
             self.addTransition(c, 'start', 'T_ID')
             self.addTransition(c, 'T_ID', 'T_ID')
             
-         # can't start with a number
+        # can't start with a number
         for c in Utils.Utils.characterList('0', '9'):
             self.addTransition(c, 'T_ID', 'T_ID')
+
+        self.addTransition('.', 'T_ID', 'blackhole')
 
 class IntegerNFA(NFA):
     def __init__(self):
