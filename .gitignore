@@ -6,6 +6,9 @@
 # regular backup files
 *.bak
 
+# generated test files
+*.out
+
 # C extensions
 *.so
 
