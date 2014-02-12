@@ -10,49 +10,81 @@ class Parser():
         return not error
         
     def s(self, tokens):
-        (exprRet, error) = expr(tokens)
-        if exprRet == [] and not error:
-            # done parsing
-            return ([], False)
+        (exprToks, error) = expr(tokens)
+        if error:
+            # nothing else to do for this production, return up an error
+            return (tokens, True)
         else:
-            # more to parse
-            return s(exprRet)
+            # no error, continue or return up
+            
+            if exprToks == []:
+                # return up no error, parsing complete
+                return ([], False)
+            else:
+                # continue consuming tokens, if possible
+                return s(exprToks)
             
     def expr(self, tokens):
-        intexprRet = intexpr(tokens)
-        if intexprRet == []:
-            return []
-
-        floatexprRet = floatexprRet(intexprRet)
-        if floatexprRet == []:
-            return []
-
-        strexprRet = strexpr(floatexprRet)
-        if strexprRet == []:
-            return []
+        (numexprToks, error) = numexpr(tokens)
         
-        boolexprRet = boolexpr(strexprRet)
-        if boolexprRet == []:
-            return []
+        if error:
+            # must not be an integer expression
+            (strexprToks, error) = strexpr(tokens)
 
-        stmtRet = stmt(boolexprRet)
-        if stmtRet == []:
-            return []
+            if error:
+                (boolexprToks, error) = boolexpr(tokens)
 
-    def intexpr(self, tokens):
+                if error:
+                    (stmtToks, error) = stmt(tokens)
+
+                    if error:
+                        # return up an error
+                        return (tokens, False)
+                    else:
+                        # return up a found statement
+                        return (stmtToks, error)
+                else:
+                    return (boolexprToks, error)
+            else:
+                return (strexprToks, error)
+        else:
+            return (numexprToks, error)
+
+    def numexpr(self, tokens):
         if tokens[0] != "T_LBRACKET":
-            return tokens # failed, try next expression
-        
-        if intbinop(tokens[1]):
-            intexprRet = intexpr(tokens[2:])
-            if intexprRet == []:
-                return []
+            # must be either an integer or an identifier
+
+            if tokens[0] != "T_INT" and tokens[0] != "T_FLOAT":
+                # has to be an identifier
+
+                if tokens[0] != "T_ID":
+                    # return up an error
+                    return (tokens, True)
+                else:
+                    return (tokens[1:], False)
+            else:
+                # both cases (int or float) will remove one terminal
+                return (tokens[1:], False)
+        else:
+            # either a unary operation or binary operation
+
+            toks = tokens[1:]
+
+            if numbinop:
+                # toks[1:] must be succeeded by 2 numexprs
+            elif numunop:
+                # toks[1:] must be succeeded by 1 numexpr
+            else:
+                # return up an error
+                return (tokens, True)
 
     
-    # accepted integer binops
-    def intbinop(self, token):
-        token in ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_MOD", "T_EXP"]
+    # 
+    # PREDICATES
+    #
+    def numbinop(self, token):
+        return token in ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_MOD", "T_EXP"]
         
-    def intunop(self, token):
-        token in ["T_MINUS", "T_SIN", "T_COS", "T_TAN"]
+    def numunop(self, token):
+        return token in ["T_MINUS", "T_SIN", "T_COS", "T_TAN"]
     
