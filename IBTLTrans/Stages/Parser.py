@@ -19,7 +19,11 @@ class Parser():
             # error
             
     def expr(self, tokens):
-        # TODO
+        if intbinop(self, tokens[0]):
+            toks = intexpr(self, tokens[1:]
+            toks = intexpr(self, toks)
+        elif intbinop(self, tokens[0]):
+            toks = intexpr(self, tokens[1:]
         
     def sPrime(self, tokens):
         if tokens[0] == "T_LPAREN":
@@ -34,6 +38,11 @@ class Parser():
         else:
             # epsilon rule
             return tokens
-            
-    def exprPrime(self, tokens):
+    
+    # accepted integer binops
+    def intbinop(self, token):
+        token in ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_MOD", "T_EXP"]
+        
+    def intunop(self, token):
+        token in ["T_MINUS", "T_SIN", "T_COS", "T_TAN"]
     
