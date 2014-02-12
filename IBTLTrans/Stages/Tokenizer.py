@@ -1,30 +1,30 @@
-from IBTLTrans import NFA
-from IBTLTrans.NFAs import *
+from IBTLTrans import DFA
+from IBTLTrans.DFAs import *
 
 class Tokenizer:
     def __init__(self, file_str):
         self._file_str = file_str
         self._tokens = []
         
-        # NOTE: set order of NFAs to precedence desired (typesNFA before identifierNFA, etc)
+        # NOTE: set order of DFAs to precedence desired (typesDFA before identifierDFA, etc)
         
-        # these are all of the NFAs that are comprised of only a single keyword
+        # these are all of the DFAs that are comprised of only a single keyword
         self._keywords = ['string', 'float', 'int', 'bool', 'while', 'if', 'else', 'true', 'false', 'stdout', 'let', 'tan', 'cos', 'sin', 'not', 'and', 'or']
         
-        self._single_keyword_nfas = []
+        self._single_keyword_dfas = []
         for key in self._keywords:
-            self._single_keyword_nfas.append(KeywordNFA(key))
+            self._single_keyword_dfas.append(KeywordDFA(key))
             
-        # the list of all NFAs
-        self._nfas = [IntegerNFA(), FloatNFA()] + self._single_keyword_nfas + [BinopNFA(), ExpressionNFA(), StringConstNFA(), IdentifierNFA()]
+        # the list of all DFAs
+        self._dfas = [IntegerDFA(), FloatDFA()] + self._single_keyword_dfas + [BinopDFA(), ExpressionDFA(), StringConstDFA(), IdentifierDFA()]
         
-    def resetNFAs(self):
-        for nfa in self._nfas:
-            nfa.reset()
+    def resetDFAs(self):
+        for dfa in self._dfas:
+            dfa.reset()
             
-    def unreadNFAs(self):
-        for nfa in self._nfas:
-            nfa.unread()
+    def unreadDFAs(self):
+        for dfa in self._dfas:
+            dfa.unread()
             
     def endOfToken(self, i):
         if len(self._file_str) - 1 == i:
@@ -57,30 +57,30 @@ class Tokenizer:
             c = self._file_str[i]
                 
             # read the current character
-            failedNFAs = 0
-            acceptingNFAs = 0
-            for nfa in self._nfas:
-                nfa.read(c)
+            failedDFAs = 0
+            acceptingDFAs = 0
+            for dfa in self._dfas:
+                dfa.read(c)
                 
-                if nfa.inFailState():
-                    failedNFAs += 1
+                if dfa.inFailState():
+                    failedDFAs += 1
                     
-                if nfa.inAcceptingState():
-                    acceptingNFAs += 1
+                if dfa.inAcceptingState():
+                    acceptingDFAs += 1
 
-            # did this new char cause all NFAs to fail?
-            if failedNFAs == len(self._nfas):
-                # unread this char from all NFAs, look for the first NFA to accept and declare that the token
+            # did this new char cause all DFAs to fail?
+            if failedDFAs == len(self._dfas):
+                # unread this char from all DFAs, look for the first DFA to accept and declare that the token
                 
-                self.unreadNFAs()
+                self.unreadDFAs()
                 
                 # see if any accept after the unread
                 found = False
-                for nfa in self._nfas:
-                    # only use the first accepting NFA
-                    if nfa.inAcceptingState() and not found:
+                for dfa in self._dfas:
+                    # only use the first accepting DFA
+                    if dfa.inAcceptingState() and not found:
                         found = True
-                        self._tokens.append(str(nfa))
+                        self._tokens.append(str(dfa))
 
                 if not found:
                     self._tokens.append("T_INVALID")
@@ -88,7 +88,7 @@ class Tokenizer:
                 
                 # skip to the next possible token
                 i = self.skipToNextToken(i)
-                self.resetNFAs()
+                self.resetDFAs()
                 
                 # done with this token, skip until the next whitespace
                 if not found:
@@ -96,20 +96,20 @@ class Tokenizer:
                     if i < 0:
                         break
             else:
-                # at least one NFA still accepting, continue
+                # at least one DFA still accepting, continue
                 i += 1
         
-        # done reading input, see if any of the NFAs are accepting
+        # done reading input, see if any of the DFAs are accepting
         
         inStartState = 0
-        for nfa in self._nfas:
-            if nfa.inStartState():
+        for dfa in self._dfas:
+            if dfa.inStartState():
                 inStartState += 1
-            elif nfa.inAcceptingState():
-                self._tokens.append(str(nfa))
+            elif dfa.inAcceptingState():
+                self._tokens.append(str(dfa))
                 return self._tokens
                 
-        if inStartState != len(self._nfas):
+        if inStartState != len(self._dfas):
             # some extra not fully formed token exists, emit error
             self._tokens.append("T_INVALID")
             

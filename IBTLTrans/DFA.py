@@ -1,4 +1,4 @@
-class NFA:
+class DFA:
     def __init__(self):
         self._curState = 'start'
         self._lastState = 'start'

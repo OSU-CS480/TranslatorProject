@@ -1,22 +1,22 @@
-from IBTLTrans.NFA import NFA
+from IBTLTrans.DFA import DFA
 from IBTLTrans.Utils import Utils
 
 notAllowedInIds = Utils.Utils.characterList('"', '\'') + [',', '/', ':', ';', '?', '@', '\\', '`', '~', '|', '{', '}']
 notAllowedInNums = ['!', '_'] + notAllowedInIds
 
-class ExpressionNFA(NFA):
+class ExpressionDFA(DFA):
     def __init__(self):
-        NFA.__init__(self)
+        DFA.__init__(self)
         
-        self.addState('T_RPAREN')
-        self.addState('T_LPAREN')
+        self.addState('T_RBRACKET')
+        self.addState('T_LBRACKET')
         
-        self.addTransition('[', 'start', 'T_LPAREN')
-        self.addTransition(']', 'start', 'T_RPAREN')
+        self.addTransition('[', 'start', 'T_LBRACKET')
+        self.addTransition(']', 'start', 'T_RBRACKET')
 
-class BinopNFA(NFA):
+class BinopDFA(DFA):
     def __init__(self):
-        NFA.__init__(self)
+        DFA.__init__(self)
         
         self.addState('T_PLUS')
         self.addTransition('+', 'start', 'T_PLUS')
@@ -57,9 +57,9 @@ class BinopNFA(NFA):
         self.addTransition('>', 'start', 'T_GT')
         self.addTransition('=', 'T_GT', 'T_GTEQ')
 
-class FloatNFA(NFA):
+class FloatDFA(DFA):
     def __init__(self):
-        NFA.__init__(self)
+        DFA.__init__(self)
 
         self.addState('LeftFloat')
 
@@ -86,9 +86,9 @@ class FloatNFA(NFA):
         for c in notAllowedInNums:
             self.addTransition(c, 'T_FLOAT', 'blackhole')
 
-class IdentifierNFA(NFA):
+class IdentifierDFA(DFA):
     def __init__(self):
-        NFA.__init__(self)
+        DFA.__init__(self)
         
         self.addState('T_ID')
         
@@ -106,9 +106,9 @@ class IdentifierNFA(NFA):
         for c in notAllowedInIds:
             self.addTransition(c, 'T_ID', 'blackhole')
 
-class IntegerNFA(NFA):
+class IntegerDFA(DFA):
     def __init__(self):
-        NFA.__init__(self)
+        DFA.__init__(self)
         
         self.addState('T_INT')
         self.addState('is_negative')
@@ -129,15 +129,15 @@ class IntegerNFA(NFA):
         for c in notAllowedInNums:
             self.addTransition(c, 'T_INT', 'blackhole')
 
-class KeywordNFA(NFA):
+class KeywordDFA(DFA):
     def __init__(self, keyword):
-        NFA.__init__(self)
+        DFA.__init__(self)
         self._keyword = keyword
         self.addAcceptingString(keyword, 'T_%s' % keyword.upper())
 
-class StringConstNFA(NFA):
+class StringConstDFA(DFA):
     def __init__(self):
-        NFA.__init__(self)
+        DFA.__init__(self)
         
         self.addState('T_CONSTSTR')
         self.addState('regular_char')
