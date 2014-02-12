@@ -1,8 +1,8 @@
 T -> S
 S -> [expr] S'
-S' -> [expr] S' | e
+S' -> [expr] S' | [T_ASSIGN T_ID expr'] | e
 expr -> binop expr' expr' | unop expr' expr' | type T_ID | stmt
-expr' -> const | [expr]
+expr' -> const | T_ID | [expr]
 
 exprlist -> expr' | expr' exprlist
 
