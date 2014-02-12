@@ -1,3 +1,5 @@
+# all brackets in this document correspond to T_LBRACKET / T_RBRACKET etc.
+
 T -> S
 
 S -> expr S | expr
