@@ -3,41 +3,51 @@ class Parser():
     def __init__(self, tokens):
         self._tokens = tokens
         
+    # this is the T production in revisedgrammar.txt
      def parse(self):
-        s()
-        return 
+        (tokens, error) = s(self._tokens)
         
-    def s(self):
-        if self._tokens[0] == "T_LPAREN":
-            toks = expr(self, self._tokens[1:]
-            
-            if toks[0] == "T_RPAREN":
-                sPrime(self, toks[1:])
-            else:
-                # error
+        return not error
+        
+    def s(self, tokens):
+        (exprRet, error) = expr(tokens)
+        if exprRet == [] and not error:
+            # done parsing
+            return ([], False)
         else:
-            # error
+            # more to parse
+            return s(exprRet)
             
     def expr(self, tokens):
-        if intbinop(self, tokens[0]):
-            toks = intexpr(self, tokens[1:]
-            toks = intexpr(self, toks)
-        elif intbinop(self, tokens[0]):
-            toks = intexpr(self, tokens[1:]
+        intexprRet = intexpr(tokens)
+        if intexprRet == []:
+            return []
+
+        floatexprRet = floatexprRet(intexprRet)
+        if floatexprRet == []:
+            return []
+
+        strexprRet = strexpr(floatexprRet)
+        if strexprRet == []:
+            return []
         
-    def sPrime(self, tokens):
-        if tokens[0] == "T_LPAREN":
-            toks = expr(self, tokens[1:]
-            
-            if toks[0] == "T_RPAREN":
-                sPrime(self, toks[1:])
-            else:
-                # error
-        elif tokens[0] == "T_ASSIGN" and tokens[1] == "T_ID":
-            exprPrime(self, tokens[2:]
-        else:
-            # epsilon rule
-            return tokens
+        boolexprRet = boolexpr(strexprRet)
+        if boolexprRet == []:
+            return []
+
+        stmtRet = stmt(boolexprRet)
+        if stmtRet == []:
+            return []
+
+    def intexpr(self, tokens):
+        if tokens[0] != "T_LBRACKET":
+            return tokens # failed, try next expression
+        
+        if intbinop(tokens[1]):
+            intexprRet = intexpr(tokens[2:])
+            if intexprRet == []:
+                return []
+
     
     # accepted integer binops
     def intbinop(self, token):
