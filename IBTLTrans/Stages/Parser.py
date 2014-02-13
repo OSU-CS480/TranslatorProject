@@ -70,21 +70,57 @@ class Parser():
 
             toks = tokens[1:]
 
-            if numbinop:
-                # toks[1:] must be succeeded by 2 numexprs
-            elif numunop:
-                # toks[1:] must be succeeded by 1 numexpr
+            if numbinopPred(toks[0]) and numunopPred(toks[0]):
+                # must be one of the operators both have in common, see how many exprs can be attained
+
+                (numexpr1Toks, error) = numexpr(toks[1:])
+                if error:
+                    # not a valid numexpr
+                    return (tokens, True)
+                else:
+                    # try getting another expression out of it
+                    (numexpr2Toks, error) = numexpr(numexpr1Toks)
+                    if error:
+                        # must be a unop
+                        
+                        if numexpr1Toks[0] == "T_RBRACKET":
+                            return (numexpr1Toks[1:], False)
+                        else:
+                            # statement not properly closed
+                            return (tokens, True)
+                    else:
+                        # must be a binop
+
+                        if numexpr2Toks[0] == "T_RBRACKET":
+                            return (numexpr2Toks[1:], False)
+                        else:
+                            # statement not properly closed
+                            return (tokens, True)
             else:
+                if numbinop(toks[0]):
+                else if numunop(toks[0]):
+                    (numexpr1Toks, error) = numexpr(toks[1:])
+                    
+                    if error:
+                        return (tokens, True)
+                    else:
+                        # check for right bracket
+                        if numexpr1Toks[1:] == "T_RBRACKET":
+                            return (numexpr1Tok[1:], False)
+                        else:
+                            return (tokens, True)
+                else:
+                    return (tokens, False)
+                    
                 # return up an error
                 return (tokens, True)
-
     
     # 
     # PREDICATES
     #
-    def numbinop(self, token):
+    def numbinopPred(self, token):
         return token in ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_MOD", "T_EXP"]
         
-    def numunop(self, token):
+    def numunopPred(self, token):
         return token in ["T_MINUS", "T_SIN", "T_COS", "T_TAN"]
     
