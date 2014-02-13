@@ -18,7 +18,7 @@ boolexpr -> [boolbinop boolexpr boolexpr] | [boolunop boolexpr] |
     [boolbinopfornum floatexpr intexpr] | [boolbinopfornum floatexpr floatexpr] | 
     [boolbinopfornum strexpr strexpr] | T_BOOL | T_ID
 boolbinop -> T_EQ | T_NOTEQ | T_AND | T_OR
-boolbinopfornum -> T_EQ | T_NOTEQ
+boolbinopfornum -> T_EQ | T_NOT
 
 exprlist -> expr | expr exprlist
 
