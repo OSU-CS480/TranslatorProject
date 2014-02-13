@@ -127,6 +127,29 @@ class Parser:
                 else:
                     return (tokens, False)
     
+    def strexpr(self, tokens):
+        if tokens[0] == "T_LBRACKET":
+            if tokens[1] != "T_PLUS":
+                return (tokens, True)
+
+            (strexpr1Toks, error) = self.strexpr(tokens[2:])
+            if error:
+                return (tokens, True)
+
+            (strexpr2Toks, error) = self.strexpr(strexpr1Toks)
+            if error:
+                return (tokens, True)
+            
+            if strexpr2Toks[0] == "T_RBRACKET":
+                return (strexpr2Toks[1:], False)
+            else:
+                return (tokens, True)
+        elif tokens[0] == "T_CONSTSTR":
+            return (tokens[1:], False)
+        elif tokens[0] == "T_ID":
+            return (tokens[1:], False)
+        else:
+            return (tokens, True)
     # 
     # PREDICATES
     #
