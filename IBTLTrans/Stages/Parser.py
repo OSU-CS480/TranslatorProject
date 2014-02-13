@@ -19,24 +19,30 @@ class Parser:
         return not error
         
     def s(self, tokens, graph):
-        (exprToks, error, exprGraph) = self.expr(tokens, newGraph)
+        (exprToks, error, exprGraph) = self.expr(tokens, graph)
         if error:
             # nothing else to do for this production, return up an error
             return (tokens, True, graph)
         else:
             # no error, continue or return up
-            graph["s"] = exprGraph
+            exprs = [exprGraph] # can be one or two for this production
             
             if exprToks == []:
                 # return up no error, parsing complete
                 newGraph = {}
-                newGraph["expr"] = exprGraph
+                newGraph["s"] = exprs
                 return ([], False, newGraph)
             else:
                 # continue consuming tokens, if possible
-                newGraph = {}
-                newGraph["expr"] = exprGraph
-                return self.s(exprToks, exprGraph)
+                (sToks, error, sGraph) = self.s(exprToks, graph)
+
+                if error:
+                    return (tokens, error, graph)
+                else:
+                    exprs.append(sGraph)
+                    newGraph = {}
+                    newGraph["s"] = exprs
+                    return (sToks, error, newGraph)
             
     def expr(self, tokens, graph):
         (numexprToks, error) = self.numexpr(tokens)
@@ -60,7 +66,9 @@ class Parser:
                 else:
                     return (boolexprToks, error)
             else:
-                return (strexprToks, error, strGraph)
+                newGraph = {}
+                newGraph["strexpr"] = strGraph
+                return (strexprToks, error, newGraph)
         else:
             return (numexprToks, error)
 
@@ -156,11 +164,9 @@ class Parser:
             else:
                 return (tokens, True)
         elif tokens[0] == "T_CONSTSTR":
-            graph["T_CONSTSTR"] = ["a str"]
-            return (tokens[1:], False, graph)
+            return (tokens[1:], False, {"T_CONSTSTR": "a str"})
         elif tokens[0] == "T_ID":
-            graph["T_ID"] = ["an id"]
-            return (tokens[1:], False, graph)
+            return (tokens[1:], False, {"T_ID": "an id"})
         else:
             return (tokens, True, graph)
     # 
