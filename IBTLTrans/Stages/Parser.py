@@ -1,39 +1,49 @@
+import pprint
+
 class Parser:
     def __init__(self, tokens):
         self._tokens = tokens
     
     # this is the T production in revisedgrammar.txt
     def parse(self):
-        (tokens, error) = self.s(self._tokens)
+        (tokens, error, graph) = self.s(self._tokens, {})
 
         if not error:
             print("parser succeeded")
+            newGraph = {}
+            newGraph["PROG"] = graph
+            pprint.pprint(newGraph)
         else:
             print("parser failed: %s" % tokens)
         
         return not error
         
-    def s(self, tokens):
-        (exprToks, error) = self.expr(tokens)
+    def s(self, tokens, graph):
+        (exprToks, error, exprGraph) = self.expr(tokens, newGraph)
         if error:
             # nothing else to do for this production, return up an error
-            return (tokens, True)
+            return (tokens, True, graph)
         else:
             # no error, continue or return up
+            graph["s"] = exprGraph
             
             if exprToks == []:
                 # return up no error, parsing complete
-                return ([], False)
+                newGraph = {}
+                newGraph["expr"] = exprGraph
+                return ([], False, newGraph)
             else:
                 # continue consuming tokens, if possible
-                return self.s(exprToks)
+                newGraph = {}
+                newGraph["expr"] = exprGraph
+                return self.s(exprToks, exprGraph)
             
-    def expr(self, tokens):
+    def expr(self, tokens, graph):
         (numexprToks, error) = self.numexpr(tokens)
         
         if error:
             # must not be an integer expression
-            (strexprToks, error) = self.strexpr(tokens)
+            (strexprToks, error, strGraph) = self.strexpr(tokens, graph)
 
             if error:
                 (boolexprToks, error) = self.boolexpr(tokens)
@@ -50,7 +60,7 @@ class Parser:
                 else:
                     return (boolexprToks, error)
             else:
-                return (strexprToks, error)
+                return (strexprToks, error, strGraph)
         else:
             return (numexprToks, error)
 
@@ -127,29 +137,32 @@ class Parser:
                 else:
                     return (tokens, False)
     
-    def strexpr(self, tokens):
+    def strexpr(self, tokens, graph):
         if tokens[0] == "T_LBRACKET":
             if tokens[1] != "T_PLUS":
-                return (tokens, True)
+                return (tokens, True, graph)
 
-            (strexpr1Toks, error) = self.strexpr(tokens[2:])
+            (strexpr1Toks, error, g1) = self.strexpr(tokens[2:], graph)
             if error:
-                return (tokens, True)
+                return (tokens, True, graph)
 
-            (strexpr2Toks, error) = self.strexpr(strexpr1Toks)
+            (strexpr2Toks, error, g2) = self.strexpr(strexpr1Toks, graph)
             if error:
-                return (tokens, True)
+                return (tokens, True, graph)
             
             if strexpr2Toks[0] == "T_RBRACKET":
-                return (strexpr2Toks[1:], False)
+                graph["T_PLUS"]=[g1,g2]
+                return (strexpr2Toks[1:], False, graph)
             else:
                 return (tokens, True)
         elif tokens[0] == "T_CONSTSTR":
-            return (tokens[1:], False)
+            graph["T_CONSTSTR"] = ["a str"]
+            return (tokens[1:], False, graph)
         elif tokens[0] == "T_ID":
-            return (tokens[1:], False)
+            graph["T_ID"] = ["an id"]
+            return (tokens[1:], False, graph)
         else:
-            return (tokens, True)
+            return (tokens, True, graph)
     # 
     # PREDICATES
     #
