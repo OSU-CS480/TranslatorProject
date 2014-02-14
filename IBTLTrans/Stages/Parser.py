@@ -191,7 +191,7 @@ class Parser:
                 return (tokens, True, {})
                 
             exprs.append(expr1Graph)
-            (expr2Toks, error, expr2Graph) = self.expr(expr2Toks, True)
+            (expr2Toks, error, expr2Graph) = self.expr(expr1Toks, True)
             
             if error:
                 # could have meant the unop version of -
