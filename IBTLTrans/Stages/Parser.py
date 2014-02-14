@@ -2,20 +2,24 @@ import pprint
 
 class Parser:
     def __init__(self, tokens):
+        self._graph = {}
         self._tokens = tokens
+
+    def __str__(self):
+        if self._graph != {}:
+            return pprint.pformat(self._graph)
+        else:
+            return self._remainingTokens
     
     # this is the T production in revisedgrammar.txt
     def parse(self):
         (tokens, error, graph) = self.s(self._tokens, {})
 
         if not error:
-            print("parser succeeded")
-            newGraph = {}
-            newGraph["PROG"] = graph
-            pprint.pprint(newGraph)
+            self._graph["PROG"] = graph
         else:
-            print("parser failed: %s" % tokens)
-        
+            self._remainingTokens = tokens
+
         return not error
         
     def s(self, tokens, graph):
@@ -156,3 +160,7 @@ class Parser:
     
     def constPred(self, token):
         return token in ["T_CONSTSTR", "T_BOOL", "T_INT", "T_FLOAT"]
+
+    def typePred(self, token):
+        return token in ["T_STRING", "T_BOOLTYPE", "T_INTTYPE", "T_FLOATTYPE"]
+
