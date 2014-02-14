@@ -62,6 +62,7 @@ class BinopDFA(DFA):
 class FloatDFA(DFA):
     def __init__(self):
         DFA.__init__(self)
+        self.storeText(True)
 
         self.addState('LeftFloat')
 
@@ -91,6 +92,7 @@ class FloatDFA(DFA):
 class IdentifierDFA(DFA):
     def __init__(self):
         DFA.__init__(self)
+        self.storeText(True)
         
         self.addState('T_ID')
         
@@ -111,6 +113,7 @@ class IdentifierDFA(DFA):
 class IntegerDFA(DFA):
     def __init__(self):
         DFA.__init__(self)
+        self.storeText(True)
         
         self.addState('T_INT')
         self.addState('is_negative')
@@ -144,6 +147,7 @@ class KeywordDFA(DFA):
 class StringConstDFA(DFA):
     def __init__(self):
         DFA.__init__(self)
+        self.storeText(True)
         
         self.addState('T_CONSTSTR')
         self.addState('regular_char')

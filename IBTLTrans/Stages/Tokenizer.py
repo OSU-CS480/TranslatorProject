@@ -1,4 +1,5 @@
 from IBTLTrans import DFA
+from IBTLTrans.Token import Token
 from IBTLTrans.DFAs import *
 
 class Tokenizer:
@@ -85,10 +86,13 @@ class Tokenizer:
                     # only use the first accepting DFA
                     if dfa.inAcceptingState() and not found:
                         found = True
-                        self._tokens.append(str(dfa))
+                        if dfa.text() == "":
+                            self._tokens.append(Token(str(dfa), None))
+                        else:
+                            self._tokens.append(Token(str(dfa), dfa.text()))
 
                 if not found:
-                    self._tokens.append("T_INVALID")
+                    self._tokens.append(Token("T_INVALID", None))
                     return self._tokens
                 
                 # skip to the next possible token
@@ -105,17 +109,19 @@ class Tokenizer:
                 i += 1
         
         # done reading input, see if any of the DFAs are accepting
-        
         inStartState = 0
         for dfa in self._dfas:
             if dfa.inStartState():
                 inStartState += 1
             elif dfa.inAcceptingState():
-                self._tokens.append(str(dfa))
+                if dfa.text() == "":
+                    self._tokens.append(Token(str(dfa), None))
+                else:
+                    self._tokens.append(Token(str(dfa), dfa.text()))
                 return self._tokens
                 
         if inStartState != len(self._dfas):
             # some extra not fully formed token exists, emit error
-            self._tokens.append("T_INVALID")
+            self._tokens.append(Token("T_INVALID", None))
             
         return self._tokens

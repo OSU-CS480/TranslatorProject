@@ -2,10 +2,17 @@ class DFA:
     def __init__(self):
         self._curState = 'start'
         self._lastState = 'start'
+        self._text = ""
+        self._storeText = False
         self._rules = {'start': {}, 'fail': {}, 'blackhole': {}}
         
     def addState(self, id):
         self._rules[id] = {}
+
+    # set if this DFA should store text (useful for consts and ids)
+    # does not store on default
+    def storeText(self, store):
+        self._storeText = store
         
     def addAcceptingString(self, str, tokenName):
         for c in str[:-1]:
@@ -33,6 +40,10 @@ class DFA:
         self._lastState = self._curState
         if possibleTransitions.get(c) != None:
             self._curState = possibleTransitions[c]
+
+            # store back texts only for DFAs that look for consts and ids
+            if self._storeText:
+                self._text += (c)
         else:
             self._curState = 'fail'
     
@@ -58,6 +69,10 @@ class DFA:
     def reset(self):
         self._curState = 'start'
         self._lastState = 'start'
+        self._text = ""
+
+    def text(self):
+        return self._text
         
     def __str__(self):
         return self._curState
