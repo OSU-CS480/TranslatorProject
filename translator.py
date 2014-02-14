@@ -20,7 +20,11 @@ def main():
 
         # parser
         p = Parser(toks)
-        p.parse()
+        if p.parse():
+            print(p)
+        else:
+            print("Parser failed to parse the string. Remaining tokens are")
+            print(p)
 
         f.close()
         
