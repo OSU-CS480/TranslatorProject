@@ -45,32 +45,67 @@ class Parser:
                     return (sToks, error, newGraph)
             
     def expr(self, tokens, graph):
-        (numexprToks, error) = self.numexpr(tokens)
-        
-        if error:
-            # must not be an integer expression
-            (strexprToks, error, strGraph) = self.strexpr(tokens, graph)
+        if tokens[0] != "T_LBRACKET":
+            return (tokens, True, graph)
+
+        # could be an assignment
+        if tokens[1] == "T_ASSIGN":
+            (exprToks, error, exprGraph) = self.exprPrime(tokens[2:], graph)
 
             if error:
-                (boolexprToks, error) = self.boolexpr(tokens)
+                return (tokens, True, graph)
+            else:
+                # todo
+        else:
+            # must be binop or unop
+
+            # T_MINUS can be either, one or more expressions may follow
+            if tokens[1] == "T_MINUS":
+                (expr1Toks, error, expr1Graph) = self.exprPrime(tokens[2:], graph)
 
                 if error:
-                    (stmtToks, error) = self.stmt(tokens)
+                    # error on first expression, not the right production
+                    return (tokens, True, graph)
+                
+                # todo: add the last expressions graph here
+                (expr2Toks, error, expr2Graph) = self.exprPrime(expr2Toks, graph)
+                
+                if error:
+                    # could have meant the unop version of -
+                    return (expr1Toks, False, newGraph)
+                else:
+                    # binop verion of -
+                    # todo: add both expressionss graphs here
+                    return (expr2Toks, False, newGraph)
+            else:
+                if binopPred(tokens[2]):
+                    # strictly binary operation
+
+                    (expr1Toks, error, expr1Graph) = self.exprPrime(tokens[2:], graph)
 
                     if error:
-                        # return up an error
-                        return (tokens, False)
+                        return (tokens, True, graph)
+                
+                    # todo: add the last expressions graph here
+                    (expr2Toks, error, expr2Graph) = self.exprPrime(expr2Toks, graph)
+                
+                    if error:
+                        return (tokens, True, graph)
                     else:
-                        # return up a found statement
-                        return (stmtToks, error)
+                        return (expr2Toks, error, newGraph)
                 else:
-                    return (boolexprToks, error)
-            else:
-                newGraph = {}
-                newGraph["strexpr"] = strGraph
-                return (strexprToks, error, newGraph)
-        else:
-            return (numexprToks, error)
+                    # strictly unary operation
+
+                    (expr1Toks, error, expr1Graph) = self.exprPrime(tokens[2:], graph)
+
+                    if error:
+                        # error on first expression, not the right production
+                        return (tokens, True, graph)
+                    else:
+                        return (expr1Toks, error, newGraph)
+
+    def exprPrime(self, tokens, graph):
+        #
 
     def numexpr(self, tokens):
         if tokens[0] != "T_LBRACKET":
