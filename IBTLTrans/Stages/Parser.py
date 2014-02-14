@@ -102,14 +102,14 @@ class Parser:
                 print(todo)
             elif tokens[1] == "T_WHILE":
                 print(todo)
-            elif tokens[1] == "IF":
+            elif tokens[1] == "T_IF":
                 # get the predicate
-                (predExpr, error, predGraph) = self.expr(tokens[1:], graph, True)
+                (predExpr, error, predGraph) = self.expr(tokens[2:], graph, True)
 
                 if error:
                     return (tokens, True, graph)
 
-                exprs.append(predExpr)
+                exprs.append(predGraph)
 
                 # get the expr to run on true
                 (trueExpr, error, trueGraph) = self.expr(predExpr, graph)
@@ -117,10 +117,10 @@ class Parser:
                 if error:
                     return (tokens, True, graph)
 
+                exprs.append(trueGraph)
                 # next condition is optional
                 if trueExpr[0] == "T_RBRACKET":
                     # must have only a condition for the predicate being true
-                    exprs.append(trueExpr)
                     newGraph["T_IF"] = exprs
                     return (trueExpr[1:], False, newGraph)
                 else:
@@ -129,7 +129,7 @@ class Parser:
                     (otherwiseExpr, error, otherwiseGraph) = self.expr(trueExpr, graph)
 
                     if not error and otherwiseExpr[0] == "T_RBRACKET":
-                        exprs.append(otherwiseExpr)
+                        exprs.append(otherwiseGraph)
                         newGraph["T_IF"] = exprs
                         return (otherwiseExpr[1:], False, newGraph)
                     else:
@@ -207,10 +207,11 @@ class Parser:
     # PREDICATES
     #
     def binopPred(self, token):
-        return token in ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_MOD", "T_EXP"]
+        return token in ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_MOD", "T_EXP", "T_OR", "T_AND", 
+                         "T_LT", "T_GT", "T_LTEQ", "T_GTEQ", "T_EQ", "T_NOTEQ"]
         
     def unopPred(self, token):
-        return token in ["T_MINUS", "T_SIN", "T_COS", "T_TAN"]
+        return token in ["T_MINUS", "T_SIN", "T_COS", "T_TAN", "T_NOT"]
     
     def constPred(self, token):
         return token in ["T_CONSTSTR", "T_BOOL", "T_INT", "T_FLOAT"]
