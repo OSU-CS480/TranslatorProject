@@ -100,9 +100,34 @@ class Parser:
                     else:
                         return (tokens, True, {})
             elif tokens[1] == "T_LET":
-                print(todo)
+                pass #TODO
+                
             elif tokens[1] == "T_WHILE":
-                print(todo)
+                # get the predicate 
+                (predExpr, error, predGraph) = self.expr(tokens[2:], True)
+                
+                # Could not get predicate
+                if error:
+                    return (tokens, True, {})
+                
+                # 
+                exprs.append(predGraph)
+
+                # get the expressionlist
+                
+                (exprListExpr, error, exprListGraph) = self.exprList(predExpr)
+
+                if error:
+                    return (tokens, True, {})
+
+                exprs.append(exprListGraph)
+
+                if exprListExpr[0] == "T_RBRACKET":
+                    newGraph["T_WHILE"] = exprs
+                    return (exprListExpr[1:], False, newGraph)
+                
+                return (tokens, True, {})
+                
             elif tokens[1] == "T_IF":
                 # get the predicate
                 (predExpr, error, predGraph) = self.expr(tokens[2:], True)
