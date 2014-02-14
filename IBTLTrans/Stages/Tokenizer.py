@@ -9,11 +9,16 @@ class Tokenizer:
         # NOTE: set order of DFAs to precedence desired (typesDFA before identifierDFA, etc)
         
         # these are all of the DFAs that are comprised of only a single keyword
-        self._keywords = ['string', 'float', 'int', 'bool', 'while', 'if', 'else', 'true', 'false', 'stdout', 'let', 'tan', 'cos', 'sin', 'not', 'and', 'or']
+        self._keywords = ['while', 'if', 'else', 'true', 'false', 'stdout', 'let', 'tan', 'cos', 'sin', 'not', 'and', 'or']
+
+        self._type_keywords = ['string', 'float', 'int', 'bool']
         
         self._single_keyword_dfas = []
         for key in self._keywords:
             self._single_keyword_dfas.append(KeywordDFA(key))
+
+        for key in self._type_keywords:
+            self._single_keyword_dfas.append(KeywordDFA(key, 'T_%s' % key.upper() + 'TYPE'))
             
         # the list of all DFAs
         self._dfas = [IntegerDFA(), FloatDFA()] + self._single_keyword_dfas + [BinopDFA(), ExpressionDFA(), StringConstDFA(), IdentifierDFA()]

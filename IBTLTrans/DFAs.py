@@ -132,10 +132,14 @@ class IntegerDFA(DFA):
             self.addTransition(c, 'T_INT', 'blackhole')
 
 class KeywordDFA(DFA):
-    def __init__(self, keyword):
+    def __init__(self, keyword, finalstate=None):
         DFA.__init__(self)
         self._keyword = keyword
-        self.addAcceptingString(keyword, 'T_%s' % keyword.upper())
+
+        if finalstate == None:
+            finalstate = 'T_%s' % keyword.upper()
+
+        self.addAcceptingString(keyword, finalstate)
 
 class StringConstDFA(DFA):
     def __init__(self):
