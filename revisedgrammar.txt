@@ -4,20 +4,13 @@ T -> S
 
 S -> expr S | expr
 
-expr-> numexpr | strexpr | boolexpr | stmt
+expr-> [binop expr' expr'] | [unop expr'] | [T_ASSIGN T_ID expr']
+expr' -> [binop expr' expr'] | [unop expr'] | const | T_ID
 
-numexpr -> [numbinop numexpr numexpr] | [numunop numexpr] | T_INT | T_FLOAT | T_ID
-numbinop -> T_PLUS | T_MINUS | T_MULT | T_DIV | T_MOD | T_EXP
-numunop -> T_MINUS | T_SIN | T_COS | T_TAN
+binop -> T_PLUS | T_MINUS | T_MULT | T_DIV | T_MOD | T_EXP
+unop -> T_NOT | T_SIN | T_COS | T_TAN | T_MINUS
 
-strexpr -> [T_PLUS strexpr strexpr] | T_CONSTSTR | T_ID
-
-# no implicit casting of integer 1 to true, etc
-boolexpr -> [boolbinop boolexpr boolexpr] | [T_NOT boolexpr] | 
-         [boolbinopfornum numexpr numexpr] | [boolbinopfornum strexpr strexpr] 
-         | T_BOOL | T_ID
-boolbinop -> T_EQ | T_NOTEQ | T_AND | T_OR
-boolbinopfornum -> T_EQ | T_NOTEQ
+const -> T_FLOAT | T_BOOL | T_INT | T_CONSTSTR
 
 exprlist -> expr | expr exprlist
 
@@ -27,7 +20,7 @@ stmt -> [ifstmt] | [whilestmt] | [letstmt] | [printstmt] | [assignstmt]
 
 # if cond then doexpr else dootherexpr
 # if cond then doexpr
-ifstmt -> T_IF boolexpr expr expr | T_IF expr expr
+ifstmt -> T_IF expr expr expr | T_IF expr expr
 
 whilestmt -> T_WHILE expr exprlist
 letstmt -> T_LET varlist
