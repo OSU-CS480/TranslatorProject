@@ -23,7 +23,7 @@ stmt -> [ifstmt] | [whilestmt] | [letstmt] | [printstmt]
 ifstmt -> T_IF expr' expr expr | T_IF expr' expr
 
 whilestmt -> T_WHILE expr' exprlist
-letstmt -> T_LET varlist
+letstmt -> T_LET [varlist]
 printstmt -> T_STDOUT expr'
 
 type -> T_STRINGTYPE | T_INTTYPE | T_FLOATTYPE | T_BOOLTYPE
