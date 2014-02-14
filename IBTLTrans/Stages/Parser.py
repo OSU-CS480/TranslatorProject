@@ -7,11 +7,15 @@ class Parser:
         self._graph = {}
         self._tokens = tokens
 
-    def __str__(self):
+    def getAstStr(self):
         if self._graph != {}:
             return pprint.pformat(self._graph)
         else:
-            return str(self._remainingTokens)
+            return "AST could not be generated"
+
+    def __str__(self):
+        if self._graph != {}:
+            return pprint.pformat(self._graph)
     
     # this is the T production in revisedgrammar.txt
     def parse(self):
