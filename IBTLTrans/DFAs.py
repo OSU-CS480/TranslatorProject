@@ -41,10 +41,12 @@ class BinopDFA(DFA):
         self.addTransition('!', 'start', 'T_NOT')
         self.addTransition('=', 'T_NOT', 'T_NOTEQ')
         
+        self.addState('T_ASSIGN')
+        self.addState('T_EQ')
         self.addState('colon')
         self.addTransition(':', 'start', 'colon')
-        self.addState('T_EQ')
-        self.addTransition('=', 'colon', 'T_EQ')
+        self.addTransition('=', 'colon', 'T_ASSIGN')
+        self.addTransition('=', 'start', 'T_EQ')
         
         self.addState('T_LT')
         self.addState('T_LTEQ')
