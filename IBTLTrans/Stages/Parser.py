@@ -9,7 +9,7 @@ class Parser:
         if self._graph != {}:
             return pprint.pformat(self._graph)
         else:
-            return self._remainingTokens
+            return str(self._remainingTokens)
     
     # this is the T production in revisedgrammar.txt
     def parse(self):
@@ -80,74 +80,128 @@ class Parser:
                 if exprToks[0] != "T_ID" or exprToks[1] != "T_RBRACKET":
                     return (tokens, True, graph)
                 else:
-                    newGraph["assign"] = [exprGraph, "id (assign)"]
+                    newGraph["T_ASSIGN"] = [exprGraph, "id (assign)"]
                     return (exprToks[1:-1], error, newGraph)
-        else:
-            # must be binop or unop
 
-            # T_MINUS can be either, one or more expressions may follow
-            if tokens[1] == "T_MINUS":
+        # either statement, binop, or unop
+
+        if self.startOfStmtPred(tokens[1]):
+            if tokens[1] == "T_STDOUT":
+                (exprToks, error, exprGraph) = self.expr(tokens[2:], graph, True)
+
+                if error:
+                    return (tokens, True, graph)
+                else:
+                    if exprToks[0] == "T_RBRACKET":
+                        exprs.append(exprGraph)
+                        newGraph["T_STDOUT"] = exprs
+                        return (exprToks[1:], False, newGraph)
+                    else:
+                        return (tokens, True, graph)
+            elif tokens[1] == "T_LET":
+                print(todo)
+            elif tokens[1] == "T_WHILE":
+                print(todo)
+            elif tokens[1] == "IF":
+                # get the predicate
+                (predExpr, error, predGraph) = self.expr(tokens[1:], graph, True)
+
+                if error:
+                    return (tokens, True, graph)
+
+                exprs.append(predExpr)
+
+                # get the expr to run on true
+                (trueExpr, error, trueGraph) = self.expr(predExpr, graph)
+
+                if error:
+                    return (tokens, True, graph)
+
+                # next condition is optional
+                if trueExpr[0] == "T_RBRACKET":
+                    # must have only a condition for the predicate being true
+                    exprs.append(trueExpr)
+                    newGraph["T_IF"] = exprs
+                    return (trueExpr[1:], False, newGraph)
+                else:
+                    # try for another expression
+
+                    (otherwiseExpr, error, otherwiseGraph) = self.expr(trueExpr, graph)
+
+                    if not error and otherwiseExpr[0] == "T_RBRACKET":
+                        exprs.append(otherwiseExpr)
+                        newGraph["T_IF"] = exprs
+                        return (otherwiseExpr[1:], False, newGraph)
+                    else:
+                        return (tokens, True, graph)
+            else:
+                return (tokens, True, graph)
+
+        # checking for binop or unop
+
+        # T_MINUS can be either, one or more expressions may follow
+        if tokens[1] == "T_MINUS":
+            (expr1Toks, error, expr1Graph) = self.expr(tokens[2:], graph, True)
+
+            if error:
+                # error on first expression, not the right production
+                return (tokens, True, graph)
+                
+            exprs.append(expr1Graph)
+            (expr2Toks, error, expr2Graph) = self.expr(expr2Toks, graph, True)
+            
+            if error:
+                # could have meant the unop version of -
+
+                if expr1Toks[0] == "T_RBRACKET":
+                    newGraph["T_MINUS"] = exprs
+                    return (expr1Toks[1:], False, newGraph)
+                else:
+                    return (tokens, True, graph)
+            else:
+                # binop verion of -
+                if expr2Toks[0] == "T_RBRACKET":
+                    exprs.append(expr2Graph)
+                    newGraph["T_MINUS"] = exprs
+                    return (expr2Toks[1:], False, newGraph)
+                else:
+                    return (tokens, True, graph)
+        else:
+            if self.binopPred(tokens[1]):
+                # strictly binary operation
+
                 (expr1Toks, error, expr1Graph) = self.expr(tokens[2:], graph, True)
+
+                if error:
+                    return (tokens, True, graph)
+                
+                exprs.append(expr1Graph)
+                (expr2Toks, error, expr2Graph) = self.expr(expr1Toks, graph, True)
+                
+                if error:
+                    return (tokens, True, graph)
+                else:
+                    if expr2Toks[0] == "T_RBRACKET":
+                        exprs.append(expr2Graph)
+                        newGraph[tokens[1]] = exprs
+                        return (expr2Toks[1:], error, newGraph)
+                    else:
+                        return (tokens, True, graph)
+            else:
+                # strictly unary operation
+
+                (exprToks, error, exprGraph) = self.expr(tokens[2:], graph, True)
 
                 if error:
                     # error on first expression, not the right production
                     return (tokens, True, graph)
-                
-                exprs.append(expr1Graph)
-                (expr2Toks, error, expr2Graph) = self.expr(expr2Toks, graph, True)
-                
-                if error:
-                    # could have meant the unop version of -
-
-                    if expr1Toks[0] == "T_RBRACKET":
-                        newGraph["T_MINUS"] = exprs
-                        return (expr1Toks[1:], False, newGraph)
-                    else:
-                        return (tokens, True, graph)
                 else:
-                    # binop verion of -
-                    if expr2Toks[0] == "T_RBRACKET":
-                        exprs.append(expr2Graph)
-                        newGraph["T_MINUS"] = exprs
-                        return (expr2Toks[1:], False, newGraph)
+                    if exprToks[0] == "T_RBRACKET":
+                        exprs.append(exprGraph)
+                        newGraph[tokens[1]] = exprs
+                        return (exprToks[1:], error, newGraph)
                     else:
                         return (tokens, True, graph)
-            else:
-                if self.binopPred(tokens[1]):
-                    # strictly binary operation
-
-                    (expr1Toks, error, expr1Graph) = self.expr(tokens[2:], graph, True)
-
-                    if error:
-                        return (tokens, True, graph)
-                
-                    exprs.append(expr1Graph)
-                    (expr2Toks, error, expr2Graph) = self.expr(expr1Toks, graph, True)
-                
-                    if error:
-                        return (tokens, True, graph)
-                    else:
-                        if expr2Toks[0] == "T_RBRACKET":
-                            exprs.append(expr2Graph)
-                            newGraph[tokens[1]] = exprs
-                            return (expr2Toks[1:], error, newGraph)
-                        else:
-                            return (tokens, True, graph)
-                else:
-                    # strictly unary operation
-
-                    (exprToks, error, exprGraph) = self.expr(tokens[2:], graph, True)
-
-                    if error:
-                        # error on first expression, not the right production
-                        return (tokens, True, graph)
-                    else:
-                        if exprToks[0] == "T_RBRACKET":
-                            exprs.append(exprGraph)
-                            newGraph[tokens[1]] = exprs
-                            return (exprToks[1:], error, newGraph)
-                        else:
-                            return (tokens, True, graph)
 
     # 
     # PREDICATES
