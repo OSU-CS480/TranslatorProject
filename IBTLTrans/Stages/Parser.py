@@ -231,19 +231,26 @@ class Parser:
 
     def exprList(self, tokens):
         newGraph = {}
+        exprs = []
 
-        (exprToks, error, exprGraph) = self.exprs(tokens)
+        (exprToks, error, exprGraph) = self.expr(tokens)
 
         if error:
             return (tokens, True, {})
 
+        exprs.append(exprGraph)
         if exprToks[0] == "T_RBRACKET":
-            return (exprToks, False, exprGraph)
+            newGraph["expr"] = exprs
+            return (exprToks, False, newGraph)
 
-        (exprListTok, error, exprListGraph) = self.exprList(exprToks)
+        (exprListTok, error, exprGraph2) = self.exprList(exprToks)
 
         if error:
             return (tokens, True, {})
+        else:
+            exprs.append(exprGraph2)
+            newGraph["expr"] = exprs
+            return (exprListTok, error, newGraph)
     # 
     # PREDICATES
     #
