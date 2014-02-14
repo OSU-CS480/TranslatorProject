@@ -3,6 +3,7 @@ T -> S
 
 S -> expr S | expr
 
+# used so that there can't be a lone constant or id in the program
 expr-> [binop expr' expr'] | [unop expr'] | [T_ASSIGN T_ID expr'] | stmt
 expr' -> [binop expr' expr'] | [unop expr'] | const | T_ID | stmt
 
@@ -19,10 +20,10 @@ stmt -> [ifstmt] | [whilestmt] | [letstmt] | [printstmt]
 
 # if cond then doexpr else dootherexpr
 # if cond then doexpr
-ifstmt -> T_IF expr expr expr | T_IF expr expr
+ifstmt -> T_IF expr' expr expr | T_IF expr' expr
 
-whilestmt -> T_WHILE expr exprlist
+whilestmt -> T_WHILE expr' exprlist
 letstmt -> T_LET varlist
-printstmt -> T_STDOUT expr
+printstmt -> T_STDOUT expr'
 
 type -> T_STRINGTYPE | T_INTTYPE | T_FLOATTYPE | T_BOOLTYPE
