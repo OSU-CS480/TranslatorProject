@@ -100,7 +100,19 @@ class Parser:
                     else:
                         return (tokens, True, {})
             elif tokens[1] == "T_LET":
-                pass #TODO
+                # get the predicate
+                if tokens[2] == "T_LBRACKET":
+                    (varToks, error, varGraph) = self.varList(tokens[3:])
+
+                    if not error and varToks[0] == "T_RBRACKET" and varToks[1] == "T_RBRACKET":
+                        exprs.append(varGraph)
+                        newGraph["T_LET"] = exprs
+                        return (varToks[2:], False, newGraph)
+                    else:
+                        return (tokens, True, {})
+
+                else:
+                    return (tokens, True, {})
                 
             elif tokens[1] == "T_WHILE":
                 # get the predicate 
@@ -110,7 +122,6 @@ class Parser:
                 if error:
                     return (tokens, True, {})
                 
-                # 
                 exprs.append(predGraph)
 
                 # get the expressionlist
@@ -228,6 +239,27 @@ class Parser:
                         return (exprToks[1:], error, newGraph)
                     else:
                         return (tokens, True, {})
+
+    def varList(self, tokens):
+        newGraph = {}
+        exprs = []
+
+        if tokens[0] == "T_LBRACKET" and self.typePred(tokens[1]) and tokens[2] == "T_ID" and tokens[3] == "T_RBRACKET":
+            exprs.append({"type": tokens[1], "identifier": tokens[2]})
+
+            # base case
+            if tokens[4] == "T_RBRACKET":
+                newGraph["var"] = exprs
+                return (tokens[4:], False, newGraph)
+            else:
+                # recursive case
+                (varListTok, error, varListGraph) = self.varList(tokens[4:])
+                exprs.append(varListGraph)
+
+                newGraph["var"] = exprs
+                return (varListTok, error, newGraph)
+        else:
+            return (tokens, True, {})
 
     def exprList(self, tokens):
         newGraph = {}
