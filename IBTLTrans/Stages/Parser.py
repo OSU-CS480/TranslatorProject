@@ -64,13 +64,13 @@ class Parser:
 
         # if expr' (prime set to True) hasn't returned by here, must be some sort of expression
         if tokens[0] != "T_LBRACKET":
-            return (tokens, True, graph)
+            return (tokens, True, {})
 
         # could be an assignment
         if tokens[1] == "T_ASSIGN":
             # in expr' assignment is not allowed
             if prime:
-                return (tokens, True, graph)
+                return (tokens, True, {})
 
             (exprToks, error, exprGraph) = self.expr(tokens[2:], True)
 
