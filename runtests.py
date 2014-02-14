@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from IBTLTrans.Token import Token
+
 import os
 import glob
 
@@ -39,7 +41,7 @@ def main():
                     ans = t.tokenize()
                     count += 1
 
-                    if ans[0] != 'T_INVALID':
+                    if ans[0].t() != 'T_INVALID':
                         print("Expected T_INVALID on `%s', got %s" % (tok, ans))
                         countInvalid += 1
 
@@ -67,13 +69,13 @@ def main():
                     print("Starting test fixture: %s" % fixtureName)
                     failed = False
                     for i in range(0, len(tokens)):
-                        if tokens[i] != answers[i]:
-                            print("Mismatched token %d: got %s, correct %s" % (i, tokens[i], answers[i]))
+                        if tokens[i].t() != answers[i]:
+                            print("Mismatched token %d: got %s, correct %s" % (i, tokens[i].t(), answers[i]))
                             failed = True
                         else:
-                            print("Matched token %d: %s" % (i, tokens[i]))
+                            print("Matched token %d: %s" % (i, tokens[i].t()))
 
-                            if tokens[i] == "T_INVALID":
+                            if tokens[i].t() == "T_INVALID":
                                 break
 
                     if not failed:
