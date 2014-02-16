@@ -55,196 +55,77 @@ class Parser:
                     newGraph["s"] = exprs
                     return (sToks, error, newGraph)
             
-    def expr(self, tokens, prime=False):
+    def expr(self, tokens):
         newGraph = {}
         exprs = []
 
-        # expr' specific productions
-        if prime:
-            if self.constPred(tokens[0].t()):
-                newGraph[tokens[0].t()] = tokens[0].text()
-                return (tokens[1:], False, newGraph)
-            elif tokens[0].t() == "T_ID":
-                newGraph["T_ID"] = tokens[0].text()
-                return (tokens[1:], False, newGraph)
+        (operToks, error, operGraph) = self.oper(tokens)
 
-        # if expr' (prime set to True) hasn't returned by here, must be some sort of expression
-        if tokens[0].t() != "T_LBRACKET":
-            return (tokens, True, {})
+        if error:
+            # Not an operation, try stmt
+            (stmtToks, error, stmtGraph) = self.stmt(tokens)
 
-        # could be an assignment
-        if tokens[1].t() == "T_ASSIGN":
-            # in expr' assignment is not allowed
-            if prime:
-                return (tokens, True, {})
-
-            (exprToks, error, exprGraph) = self.expr(tokens[2:], True)
-
-            if error:
+            if error: 
+                # Fatal error
                 return (tokens, True, {})
             else:
-                # an identifier must follow
-                if exprToks[0].t() != "T_ID" or exprToks[1].t() != "T_RBRACKET":
-                    return (tokens, True, {})
-                else:
-                    newGraph["T_ASSIGN"] = [exprGraph, exprToks[0].text()]
-                    return (exprToks[1:-1], error, newGraph)
-
-        # either statement, binop, or unop
-
-        if self.startOfStmtPred(tokens[1].t()):
-            if tokens[1].t() == "T_STDOUT":
-                (exprToks, error, exprGraph) = self.expr(tokens[2:], True)
-
-                if error:
-                    return (tokens, True, {})
-                else:
-                    if exprToks[0].t() == "T_RBRACKET":
-                        exprs.append(exprGraph)
-                        newGraph["T_STDOUT"] = exprs
-                        return (exprToks[1:], False, newGraph)
-                    else:
-                        return (tokens, True, {})
-            elif tokens[1].t() == "T_LET":
-                # get the predicate
-                if tokens[2].t() == "T_LBRACKET":
-                    (varToks, error, varGraph) = self.varList(tokens[3:])
-
-                    if not error and varToks[0].t() == "T_RBRACKET" and varToks[1].t() == "T_RBRACKET":
-                        exprs.append(varGraph)
-                        newGraph["T_LET"] = exprs
-                        return (varToks[2:], False, newGraph)
-                    else:
-                        return (tokens, True, {})
-
-                else:
-                    return (tokens, True, {})
-                
-            elif tokens[1].t() == "T_WHILE":
-                # get the predicate 
-                (predExpr, error, predGraph) = self.expr(tokens[2:], True)
-                
-                # Could not get predicate
-                if error:
-                    return (tokens, True, {})
-                
-                exprs.append(predGraph)
-
-                # get the expressionlist
-                
-                (exprListExpr, error, exprListGraph) = self.exprList(predExpr)
-
-                if error:
-                    return (tokens, True, {})
-
-                exprs.append(exprListGraph)
-
-                if exprListExpr[0].t() == "T_RBRACKET":
-                    newGraph["T_WHILE"] = exprs
-                    return (exprListExpr[1:], False, newGraph)
-                
-                return (tokens, True, {})
-                
-            elif tokens[1].t() == "T_IF":
-                # get the predicate
-                (predExpr, error, predGraph) = self.expr(tokens[2:], True)
-
-                if error:
-                    return (tokens, True, {})
-
-                exprs.append(predGraph)
-
-                # get the expr to run on true
-                (trueExpr, error, trueGraph) = self.expr(predExpr)
-
-                if error:
-                    return (tokens, True, {})
-
-                exprs.append(trueGraph)
-                # next condition is optional
-                if trueExpr[0].t() == "T_RBRACKET":
-                    # must have only a condition for the predicate being true
-                    newGraph["T_IF"] = exprs
-                    return (trueExpr[1:], False, newGraph)
-                else:
-                    # try for another expression
-
-                    (otherwiseExpr, error, otherwiseGraph) = self.expr(trueExpr)
-
-                    if not error and otherwiseExpr[0].t() == "T_RBRACKET":
-                        exprs.append(otherwiseGraph)
-                        newGraph["T_IF"] = exprs
-                        return (otherwiseExpr[1:], False, newGraph)
-                    else:
-                        return (tokens, True, {})
-            else:
-                return (tokens, True, {})
-
-        # checking for binop or unop
-
-        # T_MINUS can be either, one or more expressions may follow
-        if tokens[1].t() == "T_MINUS":
-            (expr1Toks, error, expr1Graph) = self.expr(tokens[2:], True)
-
-            if error:
-                # error on first expression, not the right production
-                return (tokens, True, {})
-                
-            exprs.append(expr1Graph)
-            (expr2Toks, error, expr2Graph) = self.expr(expr1Toks, True)
-            
-            if error:
-                # could have meant the unop version of -
-
-                if expr1Toks[0].t() == "T_RBRACKET":
-                    newGraph["T_MINUS"] = exprs
-                    return (expr1Toks[1:], False, newGraph)
-                else:
-                    return (tokens, True, {})
-            else:
-                # binop verion of -
-                if expr2Toks[0].t() == "T_RBRACKET":
-                    exprs.append(expr2Graph)
-                    newGraph["T_MINUS"] = exprs
-                    return (expr2Toks[1:], False, newGraph)
-                else:
-                    return (tokens, True, {})
+                # Sucessfully parsed a stmt
+                exprs.append(stmtGraph)
+                newGraph['expr'] = exprs
+                return (stmtToks, False, newGraph)
         else:
-            if self.binopPred(tokens[1].t()):
-                # strictly binary operation
+            # Sucessfully parsed a operation
+            exprs.append(operGraph)
+            newGraph['expr'] = exprs
+            return (operToks, False, newGraph)
 
-                (expr1Toks, error, expr1Graph) = self.expr(tokens[2:], True)
+    def oper(self, tokens):
+        newGraph = {}
+        exprs = []
+
+        if tokens[0] == "T_LBRACKET":
+            # Case 1: [T_ASSIGN T_ID oper]
+            if tokens[1] == "T_ASSIGN" and tokens[2] == "T_ID":
+                (operToks, error, operGraph) = self.oper(tokens[3:])
 
                 if error:
+                    # Error parsing for oper
+                    return (tokens, True, operGraph)
+                else:
+                    # Sucessful parse of case 1
+                    exprs.append(operGraph)
+                    newGraph["oper"] = exprs
+                    return (operToks, False, newGraph)
+
+            elif self.binopPred(tokens[1]):
+                # Case 2: [binop oper oper]
+                (operToks, error, operGraph) = self.operToks(tokens[2:])
+                if error:
+                    # Error parsing 
                     return (tokens, True, {})
-                
-                exprs.append(expr1Graph)
-                (expr2Toks, error, expr2Graph) = self.expr(expr1Toks, True)
-                
+                exprs.append(operGraph)
+
+                (operToks2, error, operGraph2) = self.oper(operToks)
+
                 if error:
+                    # Error parsing the second oper production
+                    return(operToks, True, {})
+
+                exprs.append(operGraph2)
+                newGraph["oper"] = exprs
+                return (operToks2, False, newGraph)
+
+            elif self.unopPred(tokens[1]):
+                # Case 3: [unop oper]
+                (operToks, error, operGraph) = self.oper(tokens[2:])
+                if error:
+                    # Error parsing oper
                     return (tokens, True, {})
                 else:
-                    if expr2Toks[0].t() == "T_RBRACKET":
-                        exprs.append(expr2Graph)
-                        newGraph[tokens[1].t()] = exprs
-                        return (expr2Toks[1:], error, newGraph)
-                    else:
-                        return (tokens, True, {})
-            else:
-                # strictly unary operation
-
-                (exprToks, error, exprGraph) = self.expr(tokens[2:], True)
-
-                if error:
-                    # error on first expression, not the right production
-                    return (tokens, True, {})
-                else:
-                    if exprToks[0].t() == "T_RBRACKET":
-                        exprs.append(exprGraph)
-                        newGraph[tokens[1].t()] = exprs
-                        return (exprToks[1:], error, newGraph)
-                    else:
-                        return (tokens, True, {})
+                    # Successful parse
+                    exprs.append(operGraph)
+                    newGraph["oper"] = exprs
+                    return (operToks, False, newGraph)
 
     def varList(self, tokens):
         newGraph = {}
