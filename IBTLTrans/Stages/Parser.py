@@ -27,7 +27,7 @@ class Parser:
         (tokens, error, graph) = self.s(self._tokens[1:])
 
         # must end with a ]
-        if not error and tokens[0].t() == "T_RBRACKET":
+        if not error and tokens[0].t() == "T_RBRACKET" and len(tokens) == 1:
             self._graph["T"] = graph
             return True
 
@@ -54,7 +54,13 @@ class Parser:
             return (sPrimeToks, error, newGraph)
         else:
             # try expr S'
+            print "begin expr S' derive"
+            for token in tokens:
+                print token.t()
+            print "\n"
             (exprToks, error, exprGraph) = self.expr(tokens)
+            for token in exprToks:
+                print token.t()
             if not error:
                 (sPrimeToks, error, sPrimeGraph) = self.s(exprToks, True)
                 return (sPrimeToks, error, {"S": [exprGraph, sPrimeGraph]})
@@ -64,10 +70,18 @@ class Parser:
                 (sToks, error, sGraph) = self.s(tokens[1:])
                 if not error:
                     if sToks[0].t() != "T_RBRACKET":
-                        (sPrimeToks, error, sPrimeGraph) = self.s(sToks, True)
-                        return (sPrimeToks, error, {"S%s" % "'" if prime else "": [sGraph, sPrimeGraph]})
+                        (sPrimeToks, error, sPrimeGraph) = self.s(sToks[1:], True)
+                        newGraph = {}
+                        if prime:
+                            newGraph["S'"] = [{"S'": []}, {"S'": sPrimeGraph}]
+                        else:
+                            newGraph["S"] = [{"S": []}, {"S'": sPrimeGraph}]
+                        return (sPrimeToks, error, newGraph)
+
+                        
 
             if prime:
+                print "begin epsilon derive \n"
                 return (tokens, False, {"e": []})
             else:
                 return (tokens, True, {})
@@ -75,6 +89,11 @@ class Parser:
     def expr(self, tokens):
         newGraph = {}
         exprs = []
+
+        print "begin expr token output"
+        for token in tokens:
+            print token.t()
+        print "end expr token output \n"
 
         (operToks, error, operGraph) = self.oper(tokens)
 
@@ -96,6 +115,8 @@ class Parser:
             newGraph['expr'] = exprs
             return (operToks, False, newGraph)
 
+        return (tokens, True, {})
+
     def oper(self, tokens):
         newGraph = {}
         exprs = []
@@ -103,6 +124,7 @@ class Parser:
         if tokens[0].t() == "T_LBRACKET":
             # Case 1: [T_ASSIGN T_ID oper]
             if tokens[1].t() == "T_ASSIGN" and tokens[2].t() == "T_ID":
+                exprs.append({"T_ID": tokens[2].text()})
                 (operToks, error, operGraph) = self.oper(tokens[3:])
 
                 if error:
@@ -112,7 +134,7 @@ class Parser:
                     # Sucessful parse of case 1
                     if operToks[0].t() == "T_RBRACKET":
                         exprs.append(operGraph)
-                        newGraph["oper"] = exprs
+                        newGraph["T_ASSIGN"] = exprs
                         return (operToks[1:], False, newGraph)
                     else:
                         return (operToks, True, {})
@@ -160,10 +182,12 @@ class Parser:
         # no left bracket
         elif self.constPred(tokens[0].t()):
             # Case 4: consts
+            print "begin const derive \n"
             newGraph[tokens[0].t()] = tokens[0].text()
             return (tokens[1:], False, newGraph)
 
         elif tokens[0].t() == "T_ID":
+            print "begin id derive \n"
             newGraph[tokens[0].t()] = tokens[0].text()
             return(tokens[1:], False, newGraph)
         else:
@@ -231,7 +255,9 @@ class Parser:
                 
             elif tokens[1].t() == "T_IF":
                 # get the predicate
-                (predExpr, error, predGraph) = self.expr(tokens[2:], True)
+                for t in tokens:
+                    print(t.t())
+                (predExpr, error, predGraph) = self.expr(tokens[2:])
 
                 if error:
                     return (tokens, True, {})
