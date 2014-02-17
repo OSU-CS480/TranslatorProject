@@ -41,18 +41,22 @@ class Parser:
 
         # return not error
         
-    def s(self, tokens):
-        newGraph = {}
-
+    def s(self, tokens, prime=False):
+        # check for right bracket / left bracket
         if tokens[0].t() == "T_LBRACKET" and tokens[1].t() == "T_RBRACKET":
-            (sPrimeToks, error, sPrimeGraph) = self.sPrime(tokens[2:])
-            newGraph["S"] = [{"S": []}, sPrimeGraph]
+            (sPrimeToks, error, sPrimeGraph) = self.s(tokens[2:], True)
+            newGraph = {}
+            if prime:
+                newGraph["S'"] = [{"S'": []}, {"S'": sPrimeGraph}]
+            else:
+                newGraph["S"] = [{"S": []}, {"S'": sPrimeGraph}]
+
             return (sPrimeToks, error, newGraph)
         else:
             # try expr S'
             (exprToks, error, exprGraph) = self.expr(tokens)
             if not error:
-                (sPrimeToks, error, sPrimeGraph) = self.sPrime(exprToks)
+                (sPrimeToks, error, sPrimeGraph) = self.s(exprToks, True)
                 return (sPrimeToks, error, {"S": [exprGraph, sPrimeGraph]})
 
             # try [S] S'
@@ -60,13 +64,13 @@ class Parser:
                 (sToks, error, sGraph) = self.s(tokens[1:])
                 if not error:
                     if sToks[0].t() != "T_RBRACKET":
-                        (sPrimeToks, error, sPrimeGraph) = self.sPrime(sToks)
-                        return (sPrimeToks, error, {"S": [sGraph, sPrimeGraph]})
+                        (sPrimeToks, error, sPrimeGraph) = self.s(sToks, True)
+                        return (sPrimeToks, error, {"S%s" % "'" if prime else "": [sGraph, sPrimeGraph]})
 
-            return (tokens, True, {})
-
-    def sPrime(self, tokens):
-                
+            if prime:
+                return (tokens, False, {"e": []})
+            else:
+                return (tokens, True, {})
 
             # try expression
         # newGraph = {}
@@ -192,7 +196,7 @@ class Parser:
 
             elif self.binopPred(tokens[1].t()):
                 # Case 2: [binop oper oper]
-                (operToks, error, operGraph) = self.operToks(tokens[2:])
+                (operToks, error, operGraph) = self.oper(tokens[2:])
                 if error:
                     # Error parsing 
                     return (tokens, True, {})
@@ -207,7 +211,7 @@ class Parser:
                 # Check for right bracket
                 if operToks2[0].t() == "T_RBRACKET":
                     exprs.append(operGraph2)
-                    newGraph["oper"] = exprs
+                    newGraph[tokens[1].t()] = exprs
                     return (operToks2[1:], False, newGraph)
                 else:
                     return (operToks2, True, {})
@@ -227,17 +231,16 @@ class Parser:
                         return (operToks[1:], False, newGraph)
                     else:
                         return (operToks, True, {})
-            elif self.constPred(tokens[0].t()):
-                # Case 4: consts
-                newGraph["oper"] = tokens[0].t()
-                return (tokens[1:], False, newGraph)
+        elif self.constPred(tokens[0].t()):
+            # Case 4: consts
+            newGraph["oper"] = tokens[0].text()
+            return (tokens[1:], False, newGraph)
 
-            elif tokens[0].t() == "T_ID":
-                newGraph["oper"] = "T_ID"
-                return(tokens[1:], False, newGraph)
-            else:
-                return (tokens, True, {})
-        return (tokens, True, {})
+        elif tokens[0].t() == "T_ID":
+            newGraph["oper"] = tokens[0].text()
+            return(tokens[1:], False, newGraph)
+        else:
+            return (tokens, True, {})
 
     def stmt(self, tokens):
         if self.startOfStmtPred(tokens[0].t()):
