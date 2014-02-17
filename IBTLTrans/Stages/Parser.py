@@ -209,7 +209,7 @@ class Parser:
 
                 if error:
                     # Error parsing the second oper production
-                    return(operToks, True, {})
+                    return(tokens, True, {})
 
                 # Check for right bracket
                 if operToks2[0].t() == "T_RBRACKET":
@@ -217,7 +217,7 @@ class Parser:
                     newGraph[tokens[1].t()] = exprs
                     return (operToks2[1:], False, newGraph)
                 else:
-                    return (operToks2, True, {})
+                    return (tokens, True, {})
 
             elif self.unopPred(tokens[1].t()):
                 # Case 3: [unop oper]
@@ -233,7 +233,11 @@ class Parser:
                         newGraph["oper"] = exprs
                         return (operToks[1:], False, newGraph)
                     else:
-                        return (operToks, True, {})
+                        return (tokens, True, {})
+            else:
+                return (tokens, True, {})
+                        
+        # no left bracket
         elif self.constPred(tokens[0].t()):
             # Case 4: consts
             newGraph[tokens[0].t()] = tokens[0].text()
