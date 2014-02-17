@@ -82,6 +82,7 @@ class Parser:
                     if sTok[0].t() == "T_RBRACKET":
                         newGraph["S"] = [sGraph]
                         return (sTok[1:], error, newGraph)
+                return (tokens, True, {})
         else:
             # does not start with a l bracket
             
@@ -201,6 +202,7 @@ class Parser:
                 return(tokens[1:], False, newGraph)
             else:
                 return (tokens, True, {})
+        return (tokens, True, {})
 
     def stmt(self, tokens):
         if self.startOfStmtPred(tokens[0].t()):
@@ -290,6 +292,8 @@ class Parser:
                         return (tokens, True, {})
             else:
                 return (tokens, True, {})
+        else:
+            return (tokens, True, {})
 
     def varList(self, tokens):
         newGraph = {}
