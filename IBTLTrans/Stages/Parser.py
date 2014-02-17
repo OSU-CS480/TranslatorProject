@@ -71,83 +71,6 @@ class Parser:
                 return (tokens, False, {"e": []})
             else:
                 return (tokens, True, {})
-
-            # try expression
-        # newGraph = {}
-        # print("here as %s" % prime)
-
-        # if tokens[0].t() == "T_LBRACKET":
-        #     # either production [ ] or [S]
-            
-        #     # prime = True then try rule [ ] S'
-        #     # prime = False then [ ]
-        #     if tokens[1].t() == "T_RBRACKET":
-        #         if prime:
-        #             (sPrimeTok, error, sPrimeGraph) = self.s(tokens[2:], True)
-        #             if not error:
-        #                 newSGraph = {}
-        #                 newSGraph["S"] = []
-        #                 newGraph["S'"] = newSGraph
-        #                 return (sPrimeTok, error, newGraph)
-        #             else:
-        #                 return (tokens, True, {})
-        #         else:
-        #             newGraph["S"] = []
-        #             return (tokens[2:], False, newGraph)
-
-        #     # no immediate right bracket
-        #     # prime = True then [S] S'
-        #     # prime = False then [S]
-        #     if prime:
-        #         (sTok, error, sGraph) = self.s(tokens[1:])
-        #         if not error:
-        #             # must be a closing bracket and another S'
-        #             if sTok[0].t() == "T_RBRACKET":
-        #                 (sPrimeTok, error, sPrimeGraph) = self.s(sTok[1:], True)
-        #                 if not error:
-        #                     newGraph["S'"] = [sGraph, sPrimeGraph]
-        #                     return (sPrimeTok, error, newGraph)
-                    
-        #         return (tokens, True, {})
-        #     else:
-        #         (sTok, error, sGraph) = self.s(tokens[1:])
-        #         if not error:
-        #             if sTok[0].t() == "T_RBRACKET":
-        #                 newGraph["S"] = [sGraph]
-        #                 return (sTok[1:], error, newGraph)
-        #         return (tokens, True, {})
-        # else:
-        #     # does not start with a l bracket
-        #     print("no l bracket")
-            
-        #     if not prime:
-        #         (sPrimeTok, error, sPrimeGraph) = self.s(tokens, True)
-        #         if not error:
-        #             newGraph["S"] = [sPrimeGraph]
-        #             return (sPrimeTok, error, newGraph)
-            
-        #     # must be an expr now
-        #     (exprToks, error, exprGraph) = self.expr(tokens)
-        #     if not error:
-        #         # if this is a S then we are done
-        #         if not prime:
-        #             newGraph["S"] = [exprGraph]
-        #             return (exprToks, error, newGraph)
-        #     else:
-        #         if prime:
-        #             # epsilon rule
-        #             print("epsilon rule")
-        #             newGraph["S'"] = []
-        #             return (tokens, False, newGraph)
-        #         return (tokens, True, {})
-
-        #     # must be S' now, needs another S' to follow
-        #     (sPrimeToks, error, sPrimeGraph) = self.s(exprToks, True)
-        #     if not error:
-        #         newGraph["S'"] = [exprGraph, sPrimeGraph]
-        #         return (sPrimeToks, error, newGraph)
-        #     else:
-        #         return (tokens, True, {})
             
     def expr(self, tokens):
         newGraph = {}
@@ -176,9 +99,6 @@ class Parser:
     def oper(self, tokens):
         newGraph = {}
         exprs = []
-        print("oper")
-        for t in tokens:
-            print(t.t())
 
         if tokens[0].t() == "T_LBRACKET":
             # Case 1: [T_ASSIGN T_ID oper]
@@ -250,6 +170,9 @@ class Parser:
             return (tokens, True, {})
 
     def stmt(self, tokens):
+        newGraph = {}
+        exprs = []
+
         if tokens[0].t() != "T_LBRACKET":
             return (tokens, True, {})
 
@@ -283,7 +206,7 @@ class Parser:
                 
             elif tokens[1].t() == "T_WHILE":
                 # get the predicate 
-                (predExpr, error, predGraph) = self.expr(tokens[2:], True)
+                (predExpr, error, predGraph) = self.expr(tokens[2:])
             
                 # Could not get predicate
                 if error:
