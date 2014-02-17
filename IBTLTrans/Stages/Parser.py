@@ -121,19 +121,24 @@ class Parser:
                         return (operToks, True, {})
                         
             elif tokens[1].t() == "T_MINUS":
+
                 # Case 2: [binop/unop oper maybeoper]
                 (operToks1, error, operGraph1) = self.oper(tokens[2:])
                 if error:
                     return (tokens, True, {})
-                    
+
                 # see if another oper can be gotten
                 (operToks2, error, operGraph2) = self.oper(operToks1)
                 if error:
                     if operToks1[0].t() == "T_RBRACKET":
-                        return (operToks1, error, {"T_MINUS": [operGraph1]})
+                        return (operToks1[1:], False, {"T_MINUS": [operGraph1]})
+                    else:
+                        return (tokens, True, {})
                 else:
-                    if operToks1[0].t() == "T_RBRACKET":
-                        return (operToks1, error, {"T_MINUS": [operGraph1, operGraph2]})
+                    if operToks2[0].t() == "T_RBRACKET":
+                        return (operToks2[1:], error, {"T_MINUS": [operGraph1, operGraph2]})
+                    else:
+                        return (tokens, True, {})
             elif self.binopPred(tokens[1].t()):
                 # Case 3: [binop oper oper]
                 (operToks, error, operGraph) = self.oper(tokens[2:])
