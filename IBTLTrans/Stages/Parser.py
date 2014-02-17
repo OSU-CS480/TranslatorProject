@@ -119,9 +119,23 @@ class Parser:
                         return (operToks[1:], False, newGraph)
                     else:
                         return (operToks, True, {})
-
+                        
+            elif tokens[1].t() == "T_MINUS":
+                # Case 2: [binop/unop oper maybeoper]
+                (operToks1, error, operGraph1) = self.oper(tokens[2:])
+                if error:
+                    return (tokens, True, {})
+                    
+                # see if another oper can be gotten
+                (operToks2, error, operGraph2) = self.oper(operToks1)
+                if error:
+                    if operToks1[0].t() == "T_RBRACKET":
+                        return (operToks1, error, {"T_MINUS": [operGraph1]})
+                else:
+                    if operToks1[0].t() == "T_RBRACKET":
+                        return (operToks1, error, {"T_MINUS": [operGraph1, operGraph2]})
             elif self.binopPred(tokens[1].t()):
-                # Case 2: [binop oper oper]
+                # Case 3: [binop oper oper]
                 (operToks, error, operGraph) = self.oper(tokens[2:])
                 if error:
                     # Error parsing 
@@ -143,7 +157,7 @@ class Parser:
                     return (tokens, True, {})
 
             elif self.unopPred(tokens[1].t()):
-                # Case 3: [unop oper]
+                # Case 4: [unop oper]
                 (operToks, error, operGraph) = self.oper(tokens[2:])
                 if error:
                     # Error parsing oper
@@ -162,7 +176,7 @@ class Parser:
                         
         # no left bracket
         elif self.constPred(tokens[0].t()):
-            # Case 4: consts
+            # Case 5: consts
             newGraph[tokens[0].t()] = tokens[0].text()
             return (tokens[1:], False, newGraph)
 
