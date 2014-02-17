@@ -127,6 +127,95 @@ class Parser:
                     newGraph["oper"] = exprs
                     return (operToks, False, newGraph)
 
+    def stmt(self, tokens):
+        if self.startOfStmtPred(tokens[0].t()):
+            if tokens[0].t() == "T_STDOUT":
+                (exprToks, error, exprGraph) = self.expr(tokens[1:], True)
+
+                if error:
+                    return (tokens, True, {})
+                else:
+                    if exprToks[0].t() == "T_RBRACKET":
+                        exprs.append(exprGraph)
+                        newGraph["T_STDOUT"] = exprs
+                        return (exprToks[1:], False, newGraph)
+                    else:
+                        return (tokens, True, {})
+            elif tokens[0].t() == "T_LET":
+                # get the predicate
+                if tokens[1].t() == "T_LBRACKET":
+                    (varToks, error, varGraph) = self.varList(tokens[2:])
+
+                    if not error and varToks[0].t() == "T_RBRACKET" and varToks[1].t() == "T_RBRACKET":
+                        exprs.append(varGraph)
+                        newGraph["T_LET"] = exprs
+                        return (varToks[2:], False, newGraph)
+                    else:
+                        return (tokens, True, {})
+
+                else:
+                    return (tokens, True, {})
+                
+            elif tokens[0].t() == "T_WHILE":
+                # get the predicate 
+                (predExpr, error, predGraph) = self.expr(tokens[1:], True)
+            
+                # Could not get predicate
+                if error:
+                    return (tokens, True, {})
+                
+                exprs.append(predGraph)
+
+                # get the expressionlist
+            
+                (exprListExpr, error, exprListGraph) = self.exprList(predExpr)
+
+                if error:
+                    return (tokens, True, {})
+
+                exprs.append(exprListGraph)
+
+                if exprListExpr[0].t() == "T_RBRACKET":
+                    newGraph["T_WHILE"] = exprs
+                    return (exprListExpr[1:], False, newGraph)
+                
+                return (tokens, True, {})
+                
+            elif tokens[0].t() == "T_IF":
+                # get the predicate
+                (predExpr, error, predGraph) = self.expr(tokens[1:], True)
+
+                if error:
+                    return (tokens, True, {})
+
+                exprs.append(predGraph)
+
+                # get the expr to run on true
+                (trueExpr, error, trueGraph) = self.expr(predExpr)
+
+                if error:
+                    return (tokens, True, {})
+
+                exprs.append(trueGraph)
+                # next condition is optional
+                if trueExpr[0].t() == "T_RBRACKET":
+                    # must have only a condition for the predicate being true
+                    newGraph["T_IF"] = exprs
+                    return (trueExpr[1:], False, newGraph)
+                else:
+                    # try for another expression
+
+                    (otherwiseExpr, error, otherwiseGraph) = self.expr(trueExpr)
+
+                    if not error and otherwiseExpr[0].t() == "T_RBRACKET":
+                        exprs.append(otherwiseGraph)
+                        newGraph["T_IF"] = exprs
+                        return (otherwiseExpr[1:], False, newGraph)
+                    else:
+                        return (tokens, True, {})
+            else:
+                return (tokens, True, {})
+
     def varList(self, tokens):
         newGraph = {}
         exprs = []
