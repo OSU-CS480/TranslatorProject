@@ -19,41 +19,95 @@ class Parser:
     
     # this is the T production in revisedgrammar.txt
     def parse(self):
-        (tokens, error, graph) = self.s(self._tokens)
+        # must start with a [
+        if self._tokens[0].t() != "T_LBRACKET":
+            return False
 
-        if not error:
-            self._graph["PROG"] = graph
-        else:
-            self._remainingTokens = tokens
+        (tokens, error, graph) = self.s(self._tokens[1:])
 
-        return not error
+        # must end with a ]
+        if not error and tokens[0].t() == "T_RBRACKET":
+            self._graph["T"] = graph
+            return True
+
+        return False
+        # (tokens, error, graph) = self.s(self._tokens)
+
+        # if not error:
+        #     self._graph["PROG"] = graph
+        # else:
+        #     self._remainingTokens = tokens
+
+        # return not error
         
-    def s(self, tokens):
+    def s(self, tokens, prime=False):
         newGraph = {}
 
-        (exprToks, error, exprGraph) = self.expr(tokens)
-
-        if error:
-            # nothing else to do for this production, return up an error
-            return (tokens, True, {})
-        else:
-            # no error, continue or return up
-            exprs = [exprGraph] # can be one or two for this production
+        if tokens[0].t() == "T_LBRACKET":
+            # either production [ ] or [S]
             
-            if exprToks == []:
-                # return up no error, parsing complete
-                newGraph["s"] = exprs
-                return ([], False, newGraph)
-            else:
-                # continue consuming tokens, if possible
-                (sToks, error, sGraph) = self.s(exprToks)
-
-                if error:
-                    return (tokens, False, {})
+            # prime = True then try rule [ ] S'
+            # prime = False then [ ]
+            if tokens[1].t() == "T_RBRACKET":
+                if prime:
+                    (sPrimeTok, error, sPrimeGraph) = self.s(tokens[2:], True)
+                    if not error:
+                        newSGraph = {}
+                        newSGraph["S"] = []
+                        newGraph["S'"] = newSGraph
+                        return (sPrimeTok, error, newGraph)
+                    else:
+                        return (tokens, True, {})
                 else:
-                    exprs.append(sGraph)
-                    newGraph["s"] = exprs
-                    return (sToks, error, newGraph)
+                    newGraph["S"] = []
+                    return (tokens[2:], False, newGraph)
+
+            # no immediate right bracket
+            # prime = True then [S] S'
+            # prime = False then [S]
+            if prime:
+                (sTok, error, sGraph) = self.s(tokens[1:])
+                if not error:
+                    # must be a closing bracket and another S'
+                    if sTok[0].t() == "T_RBRACKET":
+                        (sPrimeTok, error, sPrimeGraph) = self.s(sTok[1:], True)
+                        if not error:
+                            newGraph["S'"] = [sGraph, sPrimeGraph]
+                            return (sPrimeTok, error, newGraph)
+                    
+                return (tokens, True, {})
+            else:
+                (sTok, error, sGraph) = self.s(tokens[1:])
+                if not error:
+                    if sTok[0].t() == "T_RBRACKET":
+                        newGraph["S"] = [sGraph]
+                        return (sTok[1:], error, newGraph)
+        else:
+            # does not start with a l bracket
+            
+            if not prime:
+                (sPrimeTok, error, sPrimeGraph) = self.s(tokens, True)
+                if not error:
+                    newGraph["S"] = [sPrimeGraph]
+                    return (sPrimeTok, error, newGraph)
+            
+            # must be an expr now
+            (exprToks, error, exprGraph) = self.expr(tokens)
+            if not error:
+                # if this is a S then we are done
+                if not prime:
+                    newGraph["S"] = [exprGraph]
+                    return (exprToks, error, newGraph)
+            else:
+                return (tokens, True, {})
+
+            # must be S' now, needs another S' to follow
+            (sPrimeToks, error, sPrimeGraph) = self.s(exprToks, True)
+            if not error:
+                newGraph["S'"] = [exprGraph, sPrimeGraph]
+                return (sPrimeToks, error, newGraph)
+            else:
+                return (tokens, True, {})
             
     def expr(self, tokens):
         newGraph = {}
