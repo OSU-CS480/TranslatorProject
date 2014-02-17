@@ -137,9 +137,9 @@ class Parser:
         newGraph = {}
         exprs = []
 
-        if tokens[0] == "T_LBRACKET":
+        if tokens[0].t() == "T_LBRACKET":
             # Case 1: [T_ASSIGN T_ID oper]
-            if tokens[1] == "T_ASSIGN" and tokens[2] == "T_ID":
+            if tokens[1].t() == "T_ASSIGN" and tokens[2].t() == "T_ID":
                 (operToks, error, operGraph) = self.oper(tokens[3:])
 
                 if error:
@@ -147,11 +147,14 @@ class Parser:
                     return (tokens, True, operGraph)
                 else:
                     # Sucessful parse of case 1
-                    exprs.append(operGraph)
-                    newGraph["oper"] = exprs
-                    return (operToks, False, newGraph)
+                    if operToks[0].t() == "T_RBRACKET":
+                        exprs.append(operGraph)
+                        newGraph["oper"] = exprs
+                        return (operToks[1:], False, newGraph)
+                    else:
+                        return (operToks, True, {})
 
-            elif self.binopPred(tokens[1]):
+            elif self.binopPred(tokens[1].t()):
                 # Case 2: [binop oper oper]
                 (operToks, error, operGraph) = self.operToks(tokens[2:])
                 if error:
@@ -165,11 +168,15 @@ class Parser:
                     # Error parsing the second oper production
                     return(operToks, True, {})
 
-                exprs.append(operGraph2)
-                newGraph["oper"] = exprs
-                return (operToks2, False, newGraph)
+                # Check for right bracket
+                if operToks2[0].t() == "T_RBRACKET":
+                    exprs.append(operGraph2)
+                    newGraph["oper"] = exprs
+                    return (operToks2[1:], False, newGraph)
+                else:
+                    return (operToks2, True, {})
 
-            elif self.unopPred(tokens[1]):
+            elif self.unopPred(tokens[1].t()):
                 # Case 3: [unop oper]
                 (operToks, error, operGraph) = self.oper(tokens[2:])
                 if error:
@@ -177,9 +184,23 @@ class Parser:
                     return (tokens, True, {})
                 else:
                     # Successful parse
-                    exprs.append(operGraph)
-                    newGraph["oper"] = exprs
-                    return (operToks, False, newGraph)
+                    # Check for right bracket
+                    if operToks[0].t() == "T_RBRACKET":
+                        exprs.append(operGraph)
+                        newGraph["oper"] = exprs
+                        return (operToks[1:], False, newGraph)
+                    else:
+                        return (operToks, True, {})
+            elif self.constPred(tokens[0].t()):
+                # Case 4: consts
+                newGraph["oper"] = tokens[0].t()
+                return (tokens[1:], False, newGraph)
+
+            elif tokens[0].t() == "T_ID":
+                newGraph["oper"] = "T_ID"
+                return(tokens[1:], False, newGraph)
+            else:
+                return (tokens, True, {})
 
     def stmt(self, tokens):
         if self.startOfStmtPred(tokens[0].t()):
