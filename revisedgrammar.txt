@@ -1,6 +1,6 @@
 T -> [S]
-S -> [ ] | [S] | S' | expr
-S' -> [ ] S' | [S] S' | expr S'
+S -> expr S' | [ ] S' | [S] S'
+S' -> [ ] S' | expr S' | [S] S' | e
 
 expr -> oper | stmt
 
