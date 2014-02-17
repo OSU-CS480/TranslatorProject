@@ -176,6 +176,9 @@ class Parser:
     def oper(self, tokens):
         newGraph = {}
         exprs = []
+        print("oper")
+        for t in tokens:
+            print(t.t())
 
         if tokens[0].t() == "T_LBRACKET":
             # Case 1: [T_ASSIGN T_ID oper]
@@ -233,19 +236,22 @@ class Parser:
                         return (operToks, True, {})
         elif self.constPred(tokens[0].t()):
             # Case 4: consts
-            newGraph["oper"] = tokens[0].text()
+            newGraph[tokens[0].t()] = tokens[0].text()
             return (tokens[1:], False, newGraph)
 
         elif tokens[0].t() == "T_ID":
-            newGraph["oper"] = tokens[0].text()
+            newGraph[tokens[0].t()] = tokens[0].text()
             return(tokens[1:], False, newGraph)
         else:
             return (tokens, True, {})
 
     def stmt(self, tokens):
-        if self.startOfStmtPred(tokens[0].t()):
-            if tokens[0].t() == "T_STDOUT":
-                (exprToks, error, exprGraph) = self.expr(tokens[1:], True)
+        if tokens[0].t() != "T_LBRACKET":
+            return (tokens, True, {})
+
+        if self.startOfStmtPred(tokens[1].t()):
+            if tokens[1].t() == "T_STDOUT":
+                (exprToks, error, exprGraph) = self.expr(tokens[2:], True)
 
                 if error:
                     return (tokens, True, {})
@@ -256,10 +262,10 @@ class Parser:
                         return (exprToks[1:], False, newGraph)
                     else:
                         return (tokens, True, {})
-            elif tokens[0].t() == "T_LET":
+            elif tokens[1].t() == "T_LET":
                 # get the predicate
-                if tokens[1].t() == "T_LBRACKET":
-                    (varToks, error, varGraph) = self.varList(tokens[2:])
+                if tokens[2].t() == "T_LBRACKET":
+                    (varToks, error, varGraph) = self.varList(tokens[3:])
 
                     if not error and varToks[0].t() == "T_RBRACKET" and varToks[1].t() == "T_RBRACKET":
                         exprs.append(varGraph)
@@ -271,9 +277,9 @@ class Parser:
                 else:
                     return (tokens, True, {})
                 
-            elif tokens[0].t() == "T_WHILE":
+            elif tokens[1].t() == "T_WHILE":
                 # get the predicate 
-                (predExpr, error, predGraph) = self.expr(tokens[1:], True)
+                (predExpr, error, predGraph) = self.expr(tokens[2:], True)
             
                 # Could not get predicate
                 if error:
@@ -296,9 +302,9 @@ class Parser:
                 
                 return (tokens, True, {})
                 
-            elif tokens[0].t() == "T_IF":
+            elif tokens[1].t() == "T_IF":
                 # get the predicate
-                (predExpr, error, predGraph) = self.expr(tokens[1:], True)
+                (predExpr, error, predGraph) = self.expr(tokens[2:], True)
 
                 if error:
                     return (tokens, True, {})
