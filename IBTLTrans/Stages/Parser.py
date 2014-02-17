@@ -32,14 +32,6 @@ class Parser:
             return True
 
         return False
-        # (tokens, error, graph) = self.s(self._tokens)
-
-        # if not error:
-        #     self._graph["PROG"] = graph
-        # else:
-        #     self._remainingTokens = tokens
-
-        # return not error
         
     def s(self, tokens, prime=False):
         # check for right bracket / left bracket
@@ -54,13 +46,9 @@ class Parser:
             return (sPrimeToks, error, newGraph)
         else:
             # try expr S'
-            print "begin expr S' derive"
-            for token in tokens:
-                print token.t()
-            print "\n"
+
             (exprToks, error, exprGraph) = self.expr(tokens)
-            for token in exprToks:
-                print token.t()
+
             if not error:
                 (sPrimeToks, error, sPrimeGraph) = self.s(exprToks, True)
                 return (sPrimeToks, error, {"S": [exprGraph, sPrimeGraph]})
@@ -69,19 +57,17 @@ class Parser:
             if tokens[0].t() == "T_LBRACKET":
                 (sToks, error, sGraph) = self.s(tokens[1:])
                 if not error:
-                    if sToks[0].t() != "T_RBRACKET":
+                    if sToks[0].t() == "T_RBRACKET":
                         (sPrimeToks, error, sPrimeGraph) = self.s(sToks[1:], True)
                         newGraph = {}
                         if prime:
-                            newGraph["S'"] = [{"S'": []}, {"S'": sPrimeGraph}]
+                            newGraph["S'"] = [{"S": [sGraph]}, {"S'": sPrimeGraph}]
                         else:
-                            newGraph["S"] = [{"S": []}, {"S'": sPrimeGraph}]
+                            newGraph["S"] = [{"S": [sGraph]}, {"S'": sPrimeGraph}]
+
                         return (sPrimeToks, error, newGraph)
 
-                        
-
             if prime:
-                print "begin epsilon derive \n"
                 return (tokens, False, {"e": []})
             else:
                 return (tokens, True, {})
@@ -89,11 +75,6 @@ class Parser:
     def expr(self, tokens):
         newGraph = {}
         exprs = []
-
-        print "begin expr token output"
-        for token in tokens:
-            print token.t()
-        print "end expr token output \n"
 
         (operToks, error, operGraph) = self.oper(tokens)
 
@@ -182,12 +163,10 @@ class Parser:
         # no left bracket
         elif self.constPred(tokens[0].t()):
             # Case 4: consts
-            print "begin const derive \n"
             newGraph[tokens[0].t()] = tokens[0].text()
             return (tokens[1:], False, newGraph)
 
         elif tokens[0].t() == "T_ID":
-            print "begin id derive \n"
             newGraph[tokens[0].t()] = tokens[0].text()
             return(tokens[1:], False, newGraph)
         else:
@@ -255,8 +234,7 @@ class Parser:
                 
             elif tokens[1].t() == "T_IF":
                 # get the predicate
-                for t in tokens:
-                    print(t.t())
+
                 (predExpr, error, predGraph) = self.expr(tokens[2:])
 
                 if error:
