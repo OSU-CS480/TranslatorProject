@@ -30,13 +30,19 @@ class Parser:
         (tokens, error, graph) = self.s(self._tokens[1:])
 
         # must end with a ]
-        if not error and tokens[0].t() == "T_RBRACKET" and len(tokens) == 1:
+        if not error and len(tokens) == 1 and tokens[0].t() == "T_RBRACKET":
             self._graph["T"] = graph
             return True
 
         return False
         
     def s(self, tokens, prime=False):
+        if len(tokens) == 0:
+            if prime:
+                return (tokens, False, {"e": []})
+            else:
+                return (tokens, True, {})
+
         # check for right bracket / left bracket
         if tokens[0].t() == "T_LBRACKET" and tokens[1].t() == "T_RBRACKET":
             (sPrimeToks, error, sPrimeGraph) = self.s(tokens[2:], True)

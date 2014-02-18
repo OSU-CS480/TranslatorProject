@@ -89,6 +89,7 @@ def main():
 
             inputFiles = filter(lambda x: x[-3:] == "txt", files)
             answerFiles = filter(lambda x: x[-3:] == "ans", files)
+            failureFiles = filter(lambda x: x[-4:] == "fail", files)
 
             if (len(inputFiles) != len(answerFiles)) or len(inputFiles) == 0:
                 print("Missing an answer file (.ans) or input file (.txt)")
@@ -96,8 +97,30 @@ def main():
                 from IBTLTrans.Stages.Tokenizer import Tokenizer
                 from IBTLTrans.Stages.Parser import Parser
 
+                # run failure tests, if any
+                failCount = 0
+                for failFile in failureFiles:
+                    fileHandle = open(failFile, "r")
+                    fileContents = fileHandle.read()
+                    t = Tokenizer(fileContents)
+                    fileHandle.close()
+                    tokens = t.tokenize()
+
+                    p = Parser(tokens)
+                    p.parse()
+                    ast = p.getAst()
+
+                    if ast != {}:
+                        failCount += 1
+                        print("Input parsed when it shouldn't have\nInput: %s\nParse tree generated: %s\n" % (fileContents, p.getAstStr()))
+
+                if failCount != 0:
+                    print("%d out of %d files succeeded when they shouldn't have" % (failCount, len(failureFiles)))
+                else:
+                    print("Failure test cases succeeded")
+
                 print("Starting parser test fixture")
-                failed = False
+                failCount = 0
                 for i in range(0, len(inputFiles)):
                     # tokenize input
                     inputFile = open(inputFiles[i], "r")
@@ -123,12 +146,12 @@ def main():
 
                     # compar
                     if ast != answer:
-                        failed = True
+                        failCount += 1
                         print("ast returned did not match the answer file")
                         print("correct is: %s" % answer)
                 
-                if failed:
-                    print("Parser test fixture failed")
+                if failCount != 0:
+                    print("Parser test fixture failed. %d out of %d failed" % (failCount, len(inputFiles)))
                 else:
                     print("Parser test fixutre succeeded")
 
