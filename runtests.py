@@ -13,9 +13,11 @@ def main():
     import sys
 
     if len(sys.argv) < 2:
-        print("usage: ./runtests.py <test_suite>")
+        print("usage: ./runtests.py <test_suite> [--verbose]")
     else:
         name = sys.argv[1].lower()
+        
+        verbose = "--verbose" in sys.argv
 
         if name == "tokenizer":
             files = glob.glob(os.sep.join([topLevelDir, testingDir, name, testDataDir, '*']))
@@ -110,9 +112,15 @@ def main():
                     p.parse()
                     ast = p.getAst()
 
+                    if verbose:
+                        print("Reading in failure file %s:\n%s\n" % (failFile, fileContents))
+
                     if ast != {}:
                         failCount += 1
                         print("Input parsed when it shouldn't have\nInput: %s\nParse tree generated: %s\n" % (fileContents, p.getAstStr()))
+
+                        if verbose:
+                            print("AST parsed is %s" % p.getAstStr())
 
                 if failCount != 0:
                     print("%d out of %d files succeeded when they shouldn't have" % (failCount, len(failureFiles)))
@@ -124,7 +132,8 @@ def main():
                 for i in range(0, len(inputFiles)):
                     # tokenize input
                     inputFile = open(inputFiles[i], "r")
-                    t = Tokenizer(inputFile.read())
+                    contents = inputFile.read()
+                    t = Tokenizer(contents)
                     inputFile.close()
                     fixtureName = inputFiles[i][inputFiles[i].rfind('/') + 1:-4]
                     tokens = t.tokenize()
@@ -136,6 +145,9 @@ def main():
                     # stackoverflow.com/a/3739939/854854
                     ast = p.getAstStr()
                     ast = "".join(ast.split())
+
+                    if verbose:
+                        print("Reading in file %s:\n%s\n" % (inputFiles[i], contents))
 
                     # read from answers
                     answerFile = open(answerFiles[i], "r")
@@ -149,11 +161,19 @@ def main():
                         failCount += 1
                         print("ast returned did not match the answer file")
                         print("correct is: %s" % answer)
+
+                        if verbose:
+                            print("ast read was: %s" % ast)
+                    else:
+                        if verbose:
+                            print("Correct ast: %s" % ast)
+
+                    print("\n")
                 
                 if failCount != 0:
                     print("Parser test fixture failed. %d out of %d failed" % (failCount, len(inputFiles)))
                 else:
-                    print("Parser test fixutre succeeded")
+                    print("Parser test fixture succeeded")
 
 if __name__ == "__main__":
     main()
