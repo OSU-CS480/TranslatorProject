@@ -1,0 +1,9 @@
+{'T': {'S': [{'expr': [{'T_LET': [{'var': [{'identifier': 'a',
+                                            'type': 'T_FLOATTYPE'},
+                                           {'var': [{'identifier': 'b',
+                                                     'type': 'T_INTTYPE'},
+                                                    {'var': [{'identifier': 'c',
+                                                              'type': 'T_BOOLTYPE'},
+                                                             {'var': [{'identifier': 'd',
+                                                                       'type': 'T_STRINGTYPE'}]}]}]}]}]}]},
+             {'e': []}]}}

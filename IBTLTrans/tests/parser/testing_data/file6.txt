@@ -1,0 +1,1 @@
+[[cos a] [ sin b] [tan c] [not d]]
