@@ -181,7 +181,7 @@ class Parser:
                     # Check for right bracket
                     if operToks[0].t() == "T_RBRACKET":
                         exprs.append(operGraph)
-                        newGraph["oper"] = exprs
+                        newGraph[tokens[1].t()] = exprs
                         return (operToks[1:], False, newGraph)
                     else:
                         return (tokens, True, {})
