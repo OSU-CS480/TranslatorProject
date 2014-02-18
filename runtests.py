@@ -121,11 +121,14 @@ def main():
 
                         if verbose:
                             print("AST parsed is %s" % p.getAstStr())
+                    else:
+                        if verbose:
+                            print("Input failed to parse, successfully")
 
                 if failCount != 0:
-                    print("%d out of %d files succeeded when they shouldn't have" % (failCount, len(failureFiles)))
+                    print("%d out of %d files succeeded when they shouldn't have\n" % (failCount, len(failureFiles)))
                 else:
-                    print("Failure test cases succeeded")
+                    print("Failure test cases succeeded\n")
 
                 print("Starting parser test fixture")
                 failCount = 0
