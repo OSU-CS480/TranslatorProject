@@ -212,7 +212,7 @@ class Parser:
 
         if self.startOfStmtPred(tokens[1].t()):
             if tokens[1].t() == "T_STDOUT":
-                (exprToks, error, exprGraph) = self.expr(tokens[2:], True)
+                (exprToks, error, exprGraph) = self.expr(tokens[2:])
 
                 if error:
                     return (tokens, True, {})
