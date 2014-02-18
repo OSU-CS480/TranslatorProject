@@ -13,6 +13,9 @@ class Parser:
         else:
             return "AST could not be generated"
 
+    def getAst(self):
+        return self._graph
+
     def __str__(self):
         if self._graph != {}:
             return pprint.pformat(self._graph)

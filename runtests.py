@@ -83,5 +83,54 @@ def main():
                     else:
                         print("Test fixture failed\n")
                 print("Test suite complete")
+        elif name == "parser":
+            files = glob.glob(os.sep.join([topLevelDir, testingDir, name, testDataDir, '*']))
+            files.sort()
+
+            inputFiles = filter(lambda x: x[-3:] == "txt", files)
+            answerFiles = filter(lambda x: x[-3:] == "ans", files)
+
+            if (len(inputFiles) != len(answerFiles)) or len(inputFiles) == 0:
+                print("Missing an answer file (.ans) or input file (.txt)")
+            else:
+                from IBTLTrans.Stages.Tokenizer import Tokenizer
+                from IBTLTrans.Stages.Parser import Parser
+
+                print("Starting parser test fixture")
+                failed = False
+                for i in range(0, len(inputFiles)):
+                    # tokenize input
+                    inputFile = open(inputFiles[i], "r")
+                    t = Tokenizer(inputFile.read())
+                    inputFile.close()
+                    fixtureName = inputFiles[i][inputFiles[i].rfind('/') + 1:-4]
+                    tokens = t.tokenize()
+
+                    p = Parser(tokens)
+                    p.parse()
+
+                    # removing whitespace
+                    # stackoverflow.com/a/3739939/854854
+                    ast = p.getAstStr()
+                    ast = "".join(ast.split())
+
+                    # read from answers
+                    answerFile = open(answerFiles[i], "r")
+                    answer = answerFile.read()
+
+                    answer = "".join(answer.split())
+                    answerFile.close()
+
+                    # compar
+                    if ast != answer:
+                        failed = True
+                        print("ast returned did not match the answer file")
+                        print("correct is: %s" % answer)
+                
+                if failed:
+                    print("Parser test fixture failed")
+                else:
+                    print("Parser test fixutre succeeded")
+
 if __name__ == "__main__":
     main()
