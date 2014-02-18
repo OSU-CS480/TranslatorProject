@@ -7,8 +7,7 @@ TRANSLATOR_CMD=./translator.py
 TEST_CMD=./runtests.py
 
 stutest.out:
-	tail -n +1 -- IBTLTrans/tests/tokenizer/testing_data/*.txt
-	$(TEST_CMD) tokenizer > stutest.out
+	$(TEST_CMD) parser --verbose > stutest.out
 
 proftest.out:
 	cat $(PROFTEST)
