@@ -23,16 +23,19 @@ class Parser:
     # this is the T production in revisedgrammar.txt
     def parse(self):
 
-        # must start with a [
-        if self._tokens[0].t() != "T_LBRACKET":
+        try:
+            # must start with a [
+            if self._tokens[0].t() != "T_LBRACKET":
+                return False
+
+            (tokens, error, graph) = self.s(self._tokens[1:])
+
+            # must end with a ]
+            if not error and len(tokens) == 1 and tokens[0].t() == "T_RBRACKET":
+                self._graph["T"] = graph
+                return True
+        except IndexError, e:
             return False
-
-        (tokens, error, graph) = self.s(self._tokens[1:])
-
-        # must end with a ]
-        if not error and len(tokens) == 1 and tokens[0].t() == "T_RBRACKET":
-            self._graph["T"] = graph
-            return True
 
         return False
         
