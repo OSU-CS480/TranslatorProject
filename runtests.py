@@ -166,10 +166,10 @@ def main():
                         print("correct is: %s" % answer)
 
                         if verbose:
-                            print("ast read was: %s" % ast)
+                            print("ast generated was: %s" % ast)
                     else:
                         if verbose:
-                            print("Correct ast: %s" % ast)
+                            print("ast generated (matches answer file): %s" % ast)
 
                     print("\n")
                 
