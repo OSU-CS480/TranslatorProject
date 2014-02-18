@@ -355,7 +355,7 @@ class Parser:
         return token in ["T_CONSTSTR", "T_BOOL", "T_INT", "T_FLOAT"]
 
     def typePred(self, token):
-        return token in ["T_STRING", "T_BOOLTYPE", "T_INTTYPE", "T_FLOATTYPE"]
+        return token in ["T_STRINGTYPE", "T_BOOLTYPE", "T_INTTYPE", "T_FLOATTYPE"]
 
     def startOfStmtPred(self, token):
         return token in ["T_LET", "T_WHILE", "T_IF", "T_STDOUT"]
