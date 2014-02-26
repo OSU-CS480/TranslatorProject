@@ -7,13 +7,7 @@ class Parser:
         self._graph = {}
         self._tokens = tokens
 
-    def getAstStr(self):
-        if self._graph != {}:
-            return pprint.pformat(self._graph)
-        else:
-            return "AST could not be generated"
-
-    def getAst(self):
+    def getParseTree(self):
         return self._graph
 
     def __str__(self):

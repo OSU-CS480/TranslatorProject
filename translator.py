@@ -10,15 +10,16 @@ from IBTLTrans.Utils.Utils import Utils
         
 def main():    
     if len(sys.argv) < 2 and sys.stdin.isatty():
-        print("Usage translator.py <filename> [--lex,--ast, --forth]")
+        print("Usage translator.py <filename> [--lex,--parse,--ast, --forth]")
         print("\t--lex: show tokens\n\t--ast: show the abstract syntax tree generated")
-        print("\t--forth: show the forth code that is generated")
+        print("\t--parse: show parse tree\n\t--forth: show the forth code that is generated")
     else:
 
         # read some command swittches
         showTokens = False
         showAst = False
         showForthCode = True
+        showParseTree = False
 
         if "--lex" in sys.argv:
             showTokens = True
@@ -28,6 +29,9 @@ def main():
 
         if "--forth" in sys.argv:
             showForthCode = True
+
+        if "--parse" in sys.argv:
+            showParseTree = True
 
         # stackoverflow.com/a/6024166/854854
 
@@ -55,14 +59,22 @@ def main():
         # parse input
         p = Parser(toks)
         if p.parse():
-            if showAst:
-                print(p.getAstStr())
+            if showParseTree:
+                print(p)
         else:
             print("Parser failed to parse the string")
             return 1
 
         # generate Forth code
-        forth = ForthGen(p.getAst())
+        forth = ForthGen(p.getParseTree())
+
+        if not forth.generateAST():
+            print("Could not generate AST")
+            return 1
+
+        if showAst:
+            print(forth.getAST())
+
         if not forth.generate():
             print("Code could not generate Forth code from input")
             return 1
