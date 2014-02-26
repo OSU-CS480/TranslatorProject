@@ -1,45 +1,78 @@
 #!/usr/bin/python
 
 import sys
+import subprocess
 
 from IBTLTrans.Stages.Tokenizer import Tokenizer
 from IBTLTrans.Stages.Parser import Parser
+from IBTLTrans.Stages.ForthGen import ForthGen
 from IBTLTrans.Utils.Utils import Utils
         
 def main():    
-    if len(sys.argv) < 2:
-        print("Usage translator.py <filename> [--lex,--ast]")
+    if len(sys.argv) < 2 and sys.stdin.isatty():
+        print("Usage translator.py <filename> [--lex,--ast, --forth]")
+        print("\t--lex: show tokens\n\t--ast: show the abstract syntax tree generated")
+        print("\t--forth: show the forth code that is generated")
     else:
 
         # read some command swittches
         showTokens = False
-        showAst = True
+        showAst = False
+        showForthCode = True
+
         if "--lex" in sys.argv:
             showTokens = True
         
         if "--ast" in sys.argv:
             showAst = True
 
-        f = open(sys.argv[1], "r")
-        t = Tokenizer(f.read())
+        if "--forth" in sys.argv:
+            showForthCode = True
+
+        # stackoverflow.com/a/6024166/854854
+
+        if sys.stdin.isatty():
+            f = open(sys.argv[1], "r")
+            t = Tokenizer(f.read())
+            f.close()
+        else:
+            t = Tokenizer(sys.stdin.read())
+
         toks = t.tokenize()
+        # see if the last token is an invalid (or if no tokens were parsed)
+        if toks == []:
+            print("No tokens could be read from the input")
+            return 1
+        elif toks[-1:][0].t() == "T_INVALID":
+            print("Syntax error")
+            return 1
         
+        # print tokens if the user wants to see them
         if showTokens:
             for tok in toks:
                 print(tok)
 
-        # parser
+        # parse input
         p = Parser(toks)
         if p.parse():
             if showAst:
                 print(p.getAstStr())
-            
-            return 0
         else:
             print("Parser failed to parse the string")
             return 1
 
-        f.close()
-        
+        # generate Forth code
+        forth = ForthGen(p.getAst())
+        if not forth.generate():
+            print("Code could not generate Forth code from input")
+            return 1
+
+        if showForthCode:
+            print(forth.getForth())
+
+        # send to Gforth to execute
+        subprocess.call("echo " + forth.getForth() + " .s | gforth", shell=True)
+        return 0
+
 if __name__ == "__main__":
     main()
