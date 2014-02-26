@@ -3,17 +3,48 @@ from IBTLTrans.Token import Token
 import pprint
 
 class ForthGen:
+    # TODO: restructure to _opToSym = {"T_INT": {"T_PLUS": "+", ...}, "T_FLOAT": {"T_PLUS": "f+", ...}}
     _opToSym = {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_DIV": "/", "T_GTEQ": ">=", "T_GT" : ">", "T_LTEQ" : "<", "T_LT" : "<", "T_EXP" : "^", "T_NOTEQ" : "!=", "T_NOT" : "!", "T_MOD" : "%", "T_AND" : "and", "T_OR" : "or", "T_TAN" : "tan", "T_COS" : "cos", "T_SIN" : "sin"}
+
     def __init__(self, parseTree):
         self._pt = parseTree
         self._ast = {}
         self._cmds = ""
         self._error = False
 
-    # TODO: dummy function for now
     def generateAST(self):
-        self._ast = self._pt
-        return True
+        # # TODO: dummy function for now
+        # self._ast = self._pt
+        # return True
+        self._ast["T"] = self.emitAST(self._pt["T"])
+        return not self._error
+
+    # take in the parse tree parts as input, reconstruct a type annotated tree as the AST
+    # {'T': {'S': [{'S': []}, {"S'": {'e': []}}]}}
+    # {'T': {'S': [{'expr': [{'T_PLUS': [{'T_INT': '2'}, {'T_INT': '3'}]}]}, {'e': []}]}}
+    def emitAST(self, tree):
+        if type(tree) is list:
+            subSProds = []
+            for leaf in tree:
+                subSProds.append(self.emitAST(leaf))
+            return subSProds
+
+        elif type(tree) is dict:
+            if tree.has_key("S"):
+                branch = self.emitAST(tree["S"])
+                return {"S": branch}
+            elif tree.has_key("S'"):
+                branch = self.emitAST(tree["S'"])
+                return {"S'": branch}
+            elif tree.has_key("e"):
+                return {"e": []} # terminal branch, return up
+            else:
+                print("Undefined parse tree branch with keys: %s" % tree.keys())
+                self._error = True
+                return
+        else:
+            print("Error in parse tree")
+            return
 
     def getAST(self):
         return self._ast
@@ -33,19 +64,19 @@ class ForthGen:
         elif type(tree) is dict:
             # only one derivation to follow
 
-            if tree.get("S"):
+            if tree.has_key("S"):
                 self.emit(tree["S"])
-            elif tree.get("S'"):
+            elif tree.has_key("S'"):
                 self.emit(tree["S'"])
-            elif tree.get("expr"):
+            elif tree.has_key("expr"):
                 # get the subexpressions to determine type
 
-                subexprs = tree["expr"][0][tree["expr"][0].keys()]
-                leftExprType = subexprs[0]
-                rightExprType = subexprs[1]
+                # subexprs = tree["expr"][0][tree["expr"][0].keys()]
+                # leftExprType = subexprs[0]
+                # rightExprType = subexprs[1]
 
                 self.emit(tree["expr"])
-            elif tree.get("e"):
+            elif tree.has_key("e"):
                 return # epsilon production
             elif self.operTok(tree.keys()[0]):
                 # is an operation
