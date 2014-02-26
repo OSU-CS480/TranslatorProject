@@ -8,6 +8,9 @@ class ForthGen:
     
     _opToSym = {"T_INT": {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*"}, "T_FLOAT": {"T_PLUS": "f+", "T_MULT": "f*"}}
 
+    _ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
+    _consts = ["T_INT", "T_BOOL", "T_CONSTSTR", "T_FLOAT"]
+
     def __init__(self, parseTree):
         self._pt = parseTree
         self._ast = {}
@@ -15,15 +18,10 @@ class ForthGen:
         self._error = False
 
     def generateAST(self):
-        # # TODO: dummy function for now
-        # self._ast = self._pt
-        # return True
         self._ast["T"] = self.emitAST(self._pt["T"])
         return not self._error
 
     # take in the parse tree parts as input, reconstruct a type annotated tree as the AST
-    # {'T': {'S': [{'S': []}, {"S'": {'e': []}}]}}
-    # {'T': {'S': [{'expr': [{'T_PLUS': [{'T_INT': '2'}, {'T_INT': '3'}]}]}, {'e': []}]}}
     def emitAST(self, tree):
         if type(tree) is list:
             subSProds = []
@@ -41,8 +39,8 @@ class ForthGen:
             elif tree.has_key("expr"):
                 branch = self.emitAST(tree["expr"])
                 return {"expr": branch}
-            elif self.operTok(tree.keys()[0]):
-                key = tree.keys()[0]
+            elif self.operTok(tree.keys()) != None:
+                key = self.operTok(tree.keys())
                 branch = self.emitAST(tree[key])
 
                 # TODO: right now types returned by operations are assumed to be the type of their inputs, this is not always true
@@ -63,8 +61,8 @@ class ForthGen:
                         self._error = True
 
                 return {key: branch, "type": t}
-            elif self.constTok(tree.keys()[0]):
-                key = tree.keys()[0]
+            elif self.constTok(tree.keys()) != None:
+                key = self.constTok(tree.keys())
                 return {key: tree[key], "type": key}
             elif tree.has_key("e"):
                 return {"e": []} # terminal branch, return up
@@ -102,11 +100,9 @@ class ForthGen:
                 self.emit(tree["expr"])
             elif tree.has_key("e"):
                 return # epsilon production
-            elif self.operTok(tree.keys()[0]):
-                # TODO: need to refactor how operToks are round
-                # is an operation
-                oper = tree.keys()[0]
-                self.emit(tree[key])
+            elif self.operTok(tree.keys()) != None:
+                oper = self.operTok(tree.keys())
+                self.emit(tree[oper])
 
                 # see if the type of the expression matches the token
                 if ForthGen._opToSym.has_key(tree["type"]):
@@ -119,19 +115,31 @@ class ForthGen:
                 else:
                     print("no operations for type %s" % tree["type"])
                     self._error = True
-            elif self.constTok(tree.keys()[0]):
-                # TODO: need to refactor how const toks are found
-                key = tree.keys()[0]
+            elif self.constTok(tree.keys()) != None:
+                const = self.constTok(tree.keys())
 
-                # TODO: can't print all constants as they are in IBTL in Forth, need to transform some of them into Forth equivalent ones
-                self._cmds += "%s " % tree[key]
+                # modify literals and constants in such a way that Forth will interpret them correctly
+                forthified = tree[const]
+                if tree["type"] == "T_FLOAT":
+                    forthified += "e"
+
+                self._cmds += "%s " % forthified
 
     def execute(self):
         print(todo)
 
-    def operTok(self, op):
-        return op in ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
+    def operTok(self, keys):
+        return self.keyInList(keys, ForthGen._ops)
 
-    def constTok(self, t):
-        return t in ["T_INT", "T_BOOL", "T_CONSTSTR", "T_FLOAT"]
+    def constTok(self, keys):
+        return self.keyInList(keys, ForthGen._consts)
+
+    def keyInList(self, keys, l):
+        for key in keys:
+            if key == "type":
+                continue
+
+            for item in l:
+                if key == item:
+                    return key
 

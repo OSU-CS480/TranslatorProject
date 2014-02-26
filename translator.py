@@ -83,7 +83,7 @@ def main():
             print(forth.getForth())
 
         # send to Gforth to execute
-        subprocess.call("echo " + forth.getForth() + " .s | gforth", shell=True)
+        subprocess.call("echo " + forth.getForth() + " | gforth", shell=True)
         return 0
 
 if __name__ == "__main__":
