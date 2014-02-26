@@ -38,6 +38,12 @@ class ForthGen:
             elif tree.get("S'"):
                 self.emit(tree["S'"])
             elif tree.get("expr"):
+                # get the subexpressions to determine type
+
+                subexprs = tree["expr"][0][tree["expr"][0].keys()]
+                leftExprType = subexprs[0]
+                rightExprType = subexprs[1]
+
                 self.emit(tree["expr"])
             elif tree.get("e"):
                 return # epsilon production
