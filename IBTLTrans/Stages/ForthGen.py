@@ -36,6 +36,16 @@ class ForthGen:
             elif tree.has_key("S'"):
                 branch = self.emitAST(tree["S'"])
                 return {"S'": branch}
+            elif tree.has_key("expr"):
+                branch = self.emitAST(tree["expr"])
+                return {"expr": branch}
+            elif self.operTok(tree.keys()[0]):
+                key = tree.keys()[0]
+                branch = self.emitAST(tree[key])
+                return {key: branch}
+            elif self.constTok(tree.keys()[0]):
+                key = tree.keys()[0]
+                return {key: tree[key]}
             elif tree.has_key("e"):
                 return {"e": []} # terminal branch, return up
             else:
