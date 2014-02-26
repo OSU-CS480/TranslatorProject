@@ -5,7 +5,7 @@ class ForthGen:
         self._ast = ast
         self._cmds = ""
         self._error = False
-        self._opToSym = {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_DIV": "/"}
+        self._opToSym = {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_DIV": "/", "T_GTEQ": ">=", "T_GT" : ">", "T_LTEQ" : "<", "T_LT" : "<", "T_EXP" : "^", "T_NOTEQ" : "!=", "T_NOT" : "!", "T_MOD" : "%", "T_AND" : "and", "T_OR" : "or", "T_TAN" : "tan", "T_COS" : "cos", "T_SIN" : "sin"}
 
     def generate(self):
         self.emit(self._ast["T"])
@@ -38,17 +38,12 @@ class ForthGen:
             elif self.constTok(tree.keys()[0]):
                 key = tree.keys()[0]
                 self._cmds += "%s " % tree[key]
-            # elif tree.get("T_PLUS"):
-            #     self.emit(tree["T_PLUS"])
-            #     self._cmds += "+ "
-            # elif tree.get("T_INT"):
-            #     self._cmds += "%s " % tree["T_INT"]
 
     def execute(self):
         print(todo)
 
     def operTok(self, op):
-        return op in ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV"]
+        return op in ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
 
     def constTok(self, t):
         return t in ["T_INT", "T_BOOL", "T_CONSTSTR", "T_FLOAT"]
