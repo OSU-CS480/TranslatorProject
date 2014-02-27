@@ -39,11 +39,35 @@ class ForthGen:
             elif tree.has_key("expr"):
                 branch = self.emitAST(tree["expr"])
                 return {"expr": branch}
+            elif tree.has_key("T_STDOUT"):
+                # get type of the expression for stdout to determine how to print the value
+
+                branch = self.emitAST(tree["T_STDOUT"])
+
+                if branch[0]["expr"][0].has_key("type"):
+                    t = branch[0]["expr"][0]["type"]
+
+                    if t == "T_INT":
+                        # add new node to ast to signal to forth to print out
+
+                        branch[0]["cmd"] = ". " # this forth code will be added after evaling the expr
+                        return {"T_STDOUT" : [{"forth_literal": branch[0] }]}
+                    elif t == "T_FLOAT":
+                        branch[0]["cmd"] = "f. "
+                        return {"T_STDOUT" : [{"forth_literal": branch[0] }]}
+                    else:
+                        print("Not sure how to print type of %s" % t)
+                        self._error = True
+                else:
+                    print("can't use stdout on this expression")
+                    self._error = True
+
             elif self.operTok(tree.keys()) != None:
                 key = self.operTok(tree.keys())
                 branch = self.emitAST(tree[key])
 
-                # TODO: right now types returned by operations are assumed to be the type of their inputs, this is not always true
+                # TODO: right now types returned by operations are assumed to be the type of their inputs
+                # this is not always true
 
                 # determine the of this operation by inspecting 
                 # the branch that will be sent up
@@ -100,6 +124,16 @@ class ForthGen:
                 self.emit(tree["expr"])
             elif tree.has_key("e"):
                 return # epsilon production
+
+            elif tree.has_key("forth_literal"):
+                self.emit(tree["forth_literal"])
+                
+                # after the expression has been emitted, emit the command string
+                self._cmds += tree["forth_literal"]["cmd"]
+            elif tree.has_key("T_STDOUT"):
+                # printing taken care of by the encapsulated forth_literal branch
+                self.emit(tree["T_STDOUT"])
+
             elif self.operTok(tree.keys()) != None:
                 oper = self.operTok(tree.keys())
                 self.emit(tree[oper])
@@ -123,10 +157,23 @@ class ForthGen:
                 if tree["type"] == "T_FLOAT":
                     forthified += "e"
 
+                if tree["type"] == "T_CONSTSTR":
+                    forthified = self.forthStr(forthified)
+
                 self._cmds += "%s " % forthified
 
-    def execute(self):
-        print(todo)
+    # format a string literal for output by Forth
+    # the string returned, when seen by forth will cause it to be immediantly printed
+    def forthStr(self, s):
+        s.replace("\n", " \" CR .\"") # replace all newlines
+
+        # remove extra quotes at the end if the string ended in a newline
+        if s[-3:] == " .\"":
+            s = s[:-3]
+
+        # TODO: replace tabs and other \ deliminated chars
+
+        return ".\" %s "
 
     def operTok(self, keys):
         return self.keyInList(keys, ForthGen._ops)
