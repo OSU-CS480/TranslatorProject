@@ -6,7 +6,7 @@ class ForthGen:
     # TODO: restructure to _opToSym = {"T_INT": {"T_PLUS": "+", ...}, "T_FLOAT": {"T_PLUS": "f+", ...}}
     # _opToSym = {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_DIV": "/", "T_GTEQ": ">=", "T_GT" : ">", "T_LTEQ" : "<", "T_LT" : "<", "T_EXP" : "^", "T_NOTEQ" : "!=", "T_NOT" : "!", "T_MOD" : "%", "T_AND" : "and", "T_OR" : "or", "T_TAN" : "tan", "T_COS" : "cos", "T_SIN" : "sin"}
     
-    _opToSym = {"T_INT": {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*"}, "T_FLOAT": {"T_PLUS": "f+", "T_MULT": "f*"}}
+    _opToSym = {"T_INT": {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*"}, "T_FLOAT": {"T_PLUS": "f+", "T_MULT": "f*", "T_SIN": "fsin", "T_COS": "fcos", "T_TAN": "ftan"}}
 
     _ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
     _consts = ["T_INT", "T_BOOL", "T_CONSTSTR", "T_FLOAT"]
@@ -135,6 +135,11 @@ class ForthGen:
                 self.emit(tree["T_STDOUT"])
 
             elif self.operTok(tree.keys()) != None:
+                # TODO: determine how to handle casting to types (nothing about it in the assignment so far)
+                # do operations on floats and ints always cast the ints to floats?
+                # are floats ever cast back to ints?
+
+                # TODO: move this section into the ast generation
                 oper = self.operTok(tree.keys())
                 self.emit(tree[oper])
 
