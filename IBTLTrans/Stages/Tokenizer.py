@@ -96,7 +96,8 @@ class Tokenizer:
                     return self._tokens
                 
                 # skip to the next possible token
-                i = self.skipToNextToken(i)
+                if self._file_str[i] in [' ', '\t', '\n', '\r']:
+                    i = self.skipToNextToken(i)
                 self.resetDFAs()
                 
                 # done with this token, skip until the next whitespace
@@ -104,6 +105,7 @@ class Tokenizer:
                     i = self.skipOverToken(i)
                     if i < 0:
                         break
+
             else:
                 # at least one DFA still accepting, continue
                 i += 1

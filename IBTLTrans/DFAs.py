@@ -2,7 +2,7 @@ from IBTLTrans.DFA import DFA
 from IBTLTrans.Utils import Utils
 
 notAllowedInIds = Utils.Utils.characterList('"', '\'') + [',', '/', ':', ';', '?', '@', '\\', '`', '~', '|', '{', '}']
-notAllowedInNums = ['!', '_'] + notAllowedInIds
+notAllowedInNums = ['_'] + notAllowedInIds
 
 class ExpressionDFA(DFA):
     def __init__(self):
@@ -65,29 +65,26 @@ class FloatDFA(DFA):
         self.storeText(True)
 
         self.addState('LeftFloat')
+        self.addState('RightFloat')
+        self.addState('T_FLOAT')
+        self.addState('exponent')
+
+        self.addTransition('.', 'start', 'RightFloat')
 
         for c in Utils.Utils.characterList('0', '9'):
+            self.addTransition(c, 'RightFloat', 'T_FLOAT')
             self.addTransition(c, 'start', 'LeftFloat')
-
-        for c in Utils.Utils.characterList('0', '9'):
             self.addTransition(c, 'LeftFloat', 'LeftFloat')
 
-        self.addState('T_FLOAT')
         self.addTransition('.', 'LeftFloat', 'T_FLOAT')
 
         for c in Utils.Utils.characterList('0', '9'):
             self.addTransition(c, 'T_FLOAT', 'T_FLOAT')
 
-        self.addTransition('.', 'T_FLOAT', 'blackhole')
+        self.addTransition('e', 'T_FLOAT', 'exponent')
 
-        for i in Utils.Utils.characterList('a', 'z'):
-            self.addTransition(i, 'T_FLOAT', 'blackhole')
-            
-        for i in Utils.Utils.characterList('A', 'Z'):
-            self.addTransition(i, 'T_FLOAT', 'blackhole')
-
-        for c in notAllowedInNums:
-            self.addTransition(c, 'T_FLOAT', 'blackhole')
+        for c in Utils.Utils.characterList('0', '9'):
+            self.addTransition(c, 'exponent', 'T_FLOAT')
 
 class IdentifierDFA(DFA):
     def __init__(self):
@@ -105,11 +102,6 @@ class IdentifierDFA(DFA):
         for c in Utils.Utils.characterList('0', '9'):
             self.addTransition(c, 'T_ID', 'T_ID')
 
-        self.addTransition('.', 'T_ID', 'blackhole')
-
-        for c in notAllowedInIds:
-            self.addTransition(c, 'T_ID', 'blackhole')
-
 class IntegerDFA(DFA):
     def __init__(self):
         DFA.__init__(self)
@@ -124,15 +116,6 @@ class IntegerDFA(DFA):
             self.addTransition(str(i), 'start', 'T_INT')
             self.addTransition(str(i), 'is_negative', 'T_INT')
             self.addTransition(str(i), 'T_INT', 'T_INT')
-
-        for i in Utils.Utils.characterList('a', 'z'):
-            self.addTransition(i, 'T_INT', 'blackhole')
-            
-        for i in Utils.Utils.characterList('A', 'Z'):
-            self.addTransition(i, 'T_INT', 'blackhole')
-
-        for c in notAllowedInNums:
-            self.addTransition(c, 'T_INT', 'blackhole')
 
 class KeywordDFA(DFA):
     def __init__(self, keyword, finalstate=None):
