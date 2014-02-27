@@ -5,6 +5,7 @@ import subprocess
 
 from IBTLTrans.Stages.Tokenizer import Tokenizer
 from IBTLTrans.Stages.Parser import Parser
+from IBTLTrans.Stages.TypeChecker import TypeChecker
 from IBTLTrans.Stages.ForthGen import ForthGen
 from IBTLTrans.Utils.Utils import Utils
         
@@ -65,17 +66,19 @@ def main():
             print("Parser failed to parse the string")
             return 1
 
-        # generate Forth code
-        forth = ForthGen(p.getParseTree())
+        # generate perform type checking
+        typeCheck = TypeChecker(p.getParseTree())
 
-        if not forth.generateAST():
+        if not typeCheck.generateAST():
             print("Could not generate AST")
             return 1
 
         if showAst:
-            print(forth.getAST())
+            print(typeCheck)
 
-        if not forth.generate():
+        # get Forth code
+        forth = ForthGen(typeCheck.getAST())
+        if not forth.toForth():
             print("Code could not generate Forth code from input")
             return 1
 

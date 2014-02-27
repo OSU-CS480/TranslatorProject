@@ -1,0 +1,116 @@
+from IBTLTrans.Stages.ForthGen import ForthGen
+
+import pprint
+
+# transform a parse tree into an abstract syntax tree (ast)
+# adds new nodes for ForthGen to know extra Forth syntax to emit
+# adds nodes for casting as well
+class TypeChecker:
+
+    # store the parse tree
+    def __init__(self, pt):
+        self._pt = pt
+        self._ast = {}
+        self._error = False
+
+    def __str__(self):
+        return pprint.pformat(self._ast)
+
+    def getAST(self):
+        return self._ast
+
+    # build the ast, identify to the user if there was an error in building it
+    def generateAST(self):
+        self._ast["T"] = self.emitAST(self._pt["T"])
+        return not self._error
+
+    def emitAST(self, tree):
+        # go back up the call stack if there's an error
+        if self._error:
+            return
+
+        if type(tree) is list:
+            subSProds = []
+            for leaf in tree:
+                subSProds.append(self.emitAST(leaf))
+            return subSProds
+
+        elif type(tree) is dict:
+            if tree.has_key("S"):
+                branch = self.emitAST(tree["S"])
+                return {"S": branch}
+            elif tree.has_key("S'"):
+                branch = self.emitAST(tree["S'"])
+                return {"S'": branch}
+            elif tree.has_key("expr"):
+                branch = self.emitAST(tree["expr"])
+                return {"expr": branch}
+            elif tree.has_key("T_STDOUT"):
+                # get type of the expression for stdout to determine how to print the value
+
+                branch = self.emitAST(tree["T_STDOUT"])
+
+                if branch[0]["expr"][0].has_key("type"):
+                    t = branch[0]["expr"][0]["type"]
+
+                    if t == "T_INT":
+                        # add new node to ast to signal to forth to print out
+
+                        branch[0]["cmd"] = ". " # this forth code will be added after evaling the expr
+                        return {"T_STDOUT" : [{"forth_literal": branch[0] }]}
+                    elif t == "T_FLOAT":
+                        branch[0]["cmd"] = "f. "
+                        return {"T_STDOUT" : [{"forth_literal": branch[0] }]}
+                    else:
+                        print("Not sure how to print type of %s" % t)
+                        self._error = True
+                else:
+                    print("can't use stdout on this expression")
+                    self._error = True
+
+            elif ForthGen.operTok(tree.keys()) != None:
+                oper = ForthGen.operTok(tree.keys())
+                branch = self.emitAST(tree[oper])
+
+                # TODO: right now types returned by operations are assumed to be the type of their inputs
+                # this is not always true
+
+                # determine the of this operation by inspecting 
+                # the branch that will be sent up
+
+                # for now, all of the types must match up
+                # TODO: implicit casting here if required for the course?
+
+                # FIRST CHECK: do the types match (if this is a binop)
+                # left branch (will always exist for unops and binops)
+                t = branch[0]["type"]
+
+                if len(branch) > 1:
+                    t2 = branch[1]["type"]
+                    if t != t2:
+                        print("Type mismatch: got %s and %s for operation %s" % (t, t2, oper))
+                        self._error = True
+
+                # SECOND CHECK: the operator given can operate on these type(s)
+                if ForthGen.opToSym.has_key(t):
+                    if ForthGen.opToSym[t].has_key(oper):
+                        return {oper: branch, "type": t}
+                    else:
+                        print("Type error: Type %s cannot be used with operator %s" % (t, oper))
+                        self._error = True
+                else:
+                    print("Type error: type %s has no operations associated with it" % t)
+                    self._error = True
+
+            elif ForthGen.constTok(tree.keys()) != None:
+                key = ForthGen.constTok(tree.keys())
+                return {key: tree[key], "type": key}
+            elif tree.has_key("e"):
+                return {"e": []} # terminal branch, return up
+            else:
+                print("Undefined parse tree branch with keys: %s" % tree.keys())
+                self._error = True
+                return
+        else:
+            print("Error in parse tree")
+            return

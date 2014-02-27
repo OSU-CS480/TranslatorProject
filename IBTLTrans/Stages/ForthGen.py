@@ -1,107 +1,21 @@
-from IBTLTrans.Token import Token
-
 import pprint
 
 class ForthGen:
-    # TODO: restructure to _opToSym = {"T_INT": {"T_PLUS": "+", ...}, "T_FLOAT": {"T_PLUS": "f+", ...}}
-    # _opToSym = {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_DIV": "/", "T_GTEQ": ">=", "T_GT" : ">", "T_LTEQ" : "<", "T_LT" : "<", "T_EXP" : "^", "T_NOTEQ" : "!=", "T_NOT" : "!", "T_MOD" : "%", "T_AND" : "and", "T_OR" : "or", "T_TAN" : "tan", "T_COS" : "cos", "T_SIN" : "sin"}
+    # TODO: restructure to opToSym = {"T_INT": {"T_PLUS": "+", ...}, "T_FLOAT": {"T_PLUS": "f+", ...}}
+    # opToSym = {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_DIV": "/", "T_GTEQ": ">=", "T_GT" : ">", "T_LTEQ" : "<", "T_LT" : "<", "T_EXP" : "^", "T_NOTEQ" : "!=", "T_NOT" : "!", "T_MOD" : "%", "T_AND" : "and", "T_OR" : "or", "T_TAN" : "tan", "T_COS" : "cos", "T_SIN" : "sin"}
     
-    _opToSym = {"T_INT": {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*"}, "T_FLOAT": {"T_PLUS": "f+", "T_MULT": "f*", "T_SIN": "fsin", "T_COS": "fcos", "T_TAN": "ftan"}}
+    opToSym = {"T_INT": {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*"}, "T_FLOAT": {"T_PLUS": "f+", "T_MULT": "f*", "T_SIN": "fsin", "T_COS": "fcos", "T_TAN": "ftan"}}
 
-    _ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
-    _consts = ["T_INT", "T_BOOL", "T_CONSTSTR", "T_FLOAT"]
+    ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
 
-    def __init__(self, parseTree):
-        self._pt = parseTree
-        self._ast = {}
+    consts = ["T_INT", "T_BOOL", "TCONSTSTR", "T_FLOAT"]
+
+    def __init__(self, ast):
+        self._ast = ast
         self._cmds = ""
         self._error = False
 
-    def generateAST(self):
-        self._ast["T"] = self.emitAST(self._pt["T"])
-        return not self._error
-
-    # take in the parse tree parts as input, reconstruct a type annotated tree as the AST
-    def emitAST(self, tree):
-        if type(tree) is list:
-            subSProds = []
-            for leaf in tree:
-                subSProds.append(self.emitAST(leaf))
-            return subSProds
-
-        elif type(tree) is dict:
-            if tree.has_key("S"):
-                branch = self.emitAST(tree["S"])
-                return {"S": branch}
-            elif tree.has_key("S'"):
-                branch = self.emitAST(tree["S'"])
-                return {"S'": branch}
-            elif tree.has_key("expr"):
-                branch = self.emitAST(tree["expr"])
-                return {"expr": branch}
-            elif tree.has_key("T_STDOUT"):
-                # get type of the expression for stdout to determine how to print the value
-
-                branch = self.emitAST(tree["T_STDOUT"])
-
-                if branch[0]["expr"][0].has_key("type"):
-                    t = branch[0]["expr"][0]["type"]
-
-                    if t == "T_INT":
-                        # add new node to ast to signal to forth to print out
-
-                        branch[0]["cmd"] = ". " # this forth code will be added after evaling the expr
-                        return {"T_STDOUT" : [{"forth_literal": branch[0] }]}
-                    elif t == "T_FLOAT":
-                        branch[0]["cmd"] = "f. "
-                        return {"T_STDOUT" : [{"forth_literal": branch[0] }]}
-                    else:
-                        print("Not sure how to print type of %s" % t)
-                        self._error = True
-                else:
-                    print("can't use stdout on this expression")
-                    self._error = True
-
-            elif self.operTok(tree.keys()) != None:
-                key = self.operTok(tree.keys())
-                branch = self.emitAST(tree[key])
-
-                # TODO: right now types returned by operations are assumed to be the type of their inputs
-                # this is not always true
-
-                # determine the of this operation by inspecting 
-                # the branch that will be sent up
-
-                # for now, all of the types must match up
-                # TODO: implicit casting here if required for the course?
-
-                # left branch (will always exist for unops and binops)
-                t = branch[0]["type"]
-
-                if len(branch) > 1:
-                    t2 = branch[1]["type"]
-                    if t != t2:
-                        print("Type mismatch: got %s and %s for operation %s" % (t, t2, tree.keys()[0]))
-                        self._error = True
-
-                return {key: branch, "type": t}
-            elif self.constTok(tree.keys()) != None:
-                key = self.constTok(tree.keys())
-                return {key: tree[key], "type": key}
-            elif tree.has_key("e"):
-                return {"e": []} # terminal branch, return up
-            else:
-                print("Undefined parse tree branch with keys: %s" % tree.keys())
-                self._error = True
-                return
-        else:
-            print("Error in parse tree")
-            return
-
-    def getAST(self):
-        return self._ast
-
-    def generate(self):
+    def toForth(self):
         self.emit(self._ast["T"])
         return not self._error
 
@@ -134,28 +48,19 @@ class ForthGen:
                 # printing taken care of by the encapsulated forth_literal branch
                 self.emit(tree["T_STDOUT"])
 
-            elif self.operTok(tree.keys()) != None:
+            elif ForthGen.operTok(tree.keys()) != None:
                 # TODO: determine how to handle casting to types (nothing about it in the assignment so far)
                 # do operations on floats and ints always cast the ints to floats?
                 # are floats ever cast back to ints?
 
                 # TODO: move this section into the ast generation
-                oper = self.operTok(tree.keys())
+                oper = ForthGen.operTok(tree.keys())
                 self.emit(tree[oper])
 
-                # see if the type of the expression matches the token
-                if ForthGen._opToSym.has_key(tree["type"]):
-                    # see if this type has the associated token
-                    if ForthGen._opToSym[tree["type"]].has_key(oper):
-                        self._cmds += "%s " % ForthGen._opToSym[tree["type"]][oper]
-                    else:
-                        print("cannot apply %s to an expression of type %s" % (oper, tree["type"]))
-                        self._error = True
-                else:
-                    print("no operations for type %s" % tree["type"])
-                    self._error = True
-            elif self.constTok(tree.keys()) != None:
-                const = self.constTok(tree.keys())
+                self._cmds += "%s " % ForthGen.opToSym[tree["type"]][oper]
+
+            elif ForthGen.constTok(tree.keys()) != None:
+                const = ForthGen.constTok(tree.keys())
 
                 # modify literals and constants in such a way that Forth will interpret them correctly
                 forthified = tree[const]
@@ -180,13 +85,16 @@ class ForthGen:
 
         return ".\" %s "
 
-    def operTok(self, keys):
-        return self.keyInList(keys, ForthGen._ops)
+    @classmethod
+    def operTok(cls, keys):
+        return ForthGen.keyInList(keys, ForthGen.ops)
 
-    def constTok(self, keys):
-        return self.keyInList(keys, ForthGen._consts)
+    @classmethod
+    def constTok(cls, keys):
+        return ForthGen.keyInList(keys, ForthGen.consts)
 
-    def keyInList(self, keys, l):
+    @classmethod
+    def keyInList(cls, keys, l):
         for key in keys:
             if key == "type":
                 continue

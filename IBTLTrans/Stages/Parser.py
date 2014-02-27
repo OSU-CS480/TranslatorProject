@@ -11,8 +11,7 @@ class Parser:
         return self._graph
 
     def __str__(self):
-        if self._graph != {}:
-            return pprint.pformat(self._graph)
+        return pprint.pformat(self._graph)
     
     # this is the T production in revisedgrammar.txt
     def parse(self):
