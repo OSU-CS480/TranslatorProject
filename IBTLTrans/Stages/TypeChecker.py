@@ -6,7 +6,6 @@ import pprint
 # adds new nodes for ForthGen to know extra Forth syntax to emit
 # adds nodes for casting as well
 class TypeChecker:
-
     # store the parse tree
     def __init__(self, pt):
         self._pt = pt
@@ -89,29 +88,40 @@ class TypeChecker:
                 # determine the of this operation by inspecting 
                 # the branch that will be sent up
 
-                # for now, all of the types must match up
-                # TODO: implicit casting here if required for the course?
-
                 # FIRST CHECK: do the types match (if this is a binop)
                 # left branch (will always exist for unops and binops)
                 t = branch[0]["type"]
+                exprType = t
 
+                recast = False
                 if len(branch) > 1:
                     t2 = branch[1]["type"]
 
-                    if t != t2:
+                    # cast the first argument as a float
+                    if t == "T_INT" and t2 == "T_FLOAT":
+                        #t = branch[0]["type"] = "T_FLOAT"
+                        exprType = "T_FLOAT"
+                        branch[0] = [{"expr": [branch[0], {"forth_literal": {"cmd": "s>f "}}]}]
+                        recast = True
+                    elif t == "T_FLOAT" and t2 == "T_INT":
+                        #t2 = branch[1]["type"] = "T_FLOAT"
+                        exprType = "T_FLOAT"
+                        branch[1] = [{"expr": [branch[1], {"forth_literal": {"cmd": "s>f "}}]}]
+                        recast = True
+
+                    if t != t2 and not recast:
                         print("Type mismatch: got %s and %s for operation %s" % (t, t2, oper))
                         self._error = True
 
                 # SECOND CHECK: the operator given can operate on these type(s)
                 if ForthGen.opToSym.has_key(t):
-                    if ForthGen.opToSym[t].has_key(oper):
-                        return {oper: branch, "type": t}
+                    if ForthGen.opToSym[exprType].has_key(oper):
+                        return {oper: branch, "type": exprType}
                     else:
-                        print("Type error: Type %s cannot be used with operator %s" % (t, oper))
+                        print("Type error: Type %s cannot be used with operator %s" % (exprType, oper))
                         self._error = True
                 else:
-                    print("Type error: type %s has no operations associated with it" % t)
+                    print("Type error: type %s has no operations associated with it" % exprType)
                     self._error = True
 
             elif ForthGen.constTok(tree.keys()) != None:
