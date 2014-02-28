@@ -110,17 +110,17 @@ def main():
 
                     p = Parser(tokens)
                     p.parse()
-                    ast = p.getAst()
+                    pt = p.getParseTree()
 
                     if verbose:
                         print("Reading in failure file %s:\n%s\n" % (failFile, fileContents))
 
-                    if ast != {}:
+                    if pt != {}:
                         failCount += 1
-                        print("Input parsed when it shouldn't have\nInput: %s\nParse tree generated: %s\n" % (fileContents, p.getAstStr()))
+                        print("Input parsed when it shouldn't have\nInput: %s\nParse tree generated: %s\n" % (fileContents, str(p)))
 
                         if verbose:
-                            print("AST parsed is %s" % p.getAstStr())
+                            print("Parse tree parsed is %s" % str(p))
                     else:
                         if verbose:
                             print("Input failed to parse, successfully")
@@ -146,8 +146,8 @@ def main():
 
                     # removing whitespace
                     # stackoverflow.com/a/3739939/854854
-                    ast = p.getAstStr()
-                    ast = "".join(ast.split())
+                    pt = str(p)
+                    pt = "".join(pt.split())
 
                     if verbose:
                         print("Reading in file %s:\n%s\n" % (inputFiles[i], contents))
@@ -160,23 +160,26 @@ def main():
                     answerFile.close()
 
                     # compar
-                    if ast != answer:
+                    if pt != answer:
                         failCount += 1
-                        print("ast returned did not match the answer file")
+                        print("parse tree returned did not match the answer file")
                         print("correct is: %s" % answer)
 
                         if verbose:
-                            print("ast generated was: %s" % ast)
+                            print("parse tree generated was: %s" % pt)
                     else:
                         if verbose:
-                            print("ast generated (matches answer file): %s" % ast)
+                            print("parse tree generated (matches answer file): %s" % pt)
+                            print("\n")
 
-                    print("\n")
-                
                 if failCount != 0:
                     print("Parser test fixture failed. %d out of %d failed" % (failCount, len(inputFiles)))
                 else:
                     print("Parser test fixture succeeded")
+        elif name == "constexprs":
+            print(todo)
+        else:
+            print("Could not find test suite %s" % name)
 
 if __name__ == "__main__":
     main()
