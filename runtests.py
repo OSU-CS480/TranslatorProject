@@ -2,6 +2,8 @@
 
 from IBTLTrans.Token import Token
 
+import subprocess as sub
+import tempfile
 import os
 import glob
 
@@ -189,7 +191,7 @@ def main():
             else:
                 from IBTLTrans.Stages.Tokenizer import Tokenizer
                 from IBTLTrans.Stages.Parser import Parser
-                from IBTLTrans.Stages.TypeChecker import TypChecker
+                from IBTLTrans.Stages.TypeChecker import TypeChecker
                 from IBTLTrans.Stages.ForthGen import ForthGen
 
                 # run failure tests, if any
@@ -229,6 +231,10 @@ def main():
                     # tokenize input
                     inputFile = open(inputFiles[i], "r")
                     contents = inputFile.read()
+
+                    if verbose:
+                        print("Reading in file %s:\n%s\n" % (inputFiles[i], contents))
+
                     t = Tokenizer(contents)
                     inputFile.close()
                     fixtureName = inputFiles[i][inputFiles[i].rfind('/') + 1:-4]
@@ -245,34 +251,50 @@ def main():
                     else:
                         forth = ForthGen(tc)
 
-                        # TODO: capture the GForth output
+                        if not forth.toForth():
+                            print("Could not generate Forth code for this input")
+                            failCount += 1
+                        else:
+                            forth.addBye()
 
-                        if verbose:
-                            print("Reading in file %s:\n%s\n" % (inputFiles[i], contents))
+                            # write this forth code in a temp file
+                            tempForth = tempfile.NamedTemporaryFile(delete=False)
+                            tempForth.write(forth.getForth())
+                            tempForth.close()
 
-                    # read from answers
-                    answerFile = open(answerFiles[i], "r")
-                    answer = answerFile.read()
+                            # capture the GForth output
+                            proc = sub.Popen(["gforth", tempForth.name], stdout=sub.PIPE, stderr=sub.PIPE)
+                            (out, error) = proc.communicate()
 
-                    answerFile.close()
+                            if proc.returncode != 0:
+                                print("Forth returned an error value %d" % proc.returncode)
+                                failCount += 1
+                            else:
+                                if out == None:
+                                    out = ""
 
-                    # compare
-                    if pt != answer:
-                        failCount += 1
-                        print("parse tree returned did not match the answer file")
-                        print("correct is: %s" % answer)
+                                if error != None and error != "" and verbose:
+                                    print("Forth wrote: `%s' to standard error" % error)
 
-                        if verbose:
-                            print("parse tree generated was: %s" % pt)
-                    else:
-                        if verbose:
-                            print("parse tree generated (matches answer file): %s" % pt)
-                            print("\n")
+                                # compare to answer file
+                                answerFile = open(answerFiles[i], "r")
+                                answer = answerFile.read()
+                                answerFile.close()
+
+                                if out == answer:
+                                    if verbose:
+                                        print("Forth output matched what was expected")
+                                else:
+                                    failCount += 1
+                                    print("Forth output didn't match expected output")
+
+                                    if verbose:
+                                        print("Expected `%s'\nGot `%s'" % (answer, out))
 
                 if failCount != 0:
-                    print("Parser test fixture failed. %d out of %d failed" % (failCount, len(inputFiles)))
+                    print("Constexpr test fixture failed. %d out of %d failed" % (failCount, len(inputFiles)))
                 else:
-                    print("Parser test fixture succeeded")
+                    print("Constexpr test fixture succeeded")
         else:
             print("Could not find test suite %s" % name)
 

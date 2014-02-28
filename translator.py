@@ -104,10 +104,10 @@ def main():
         tempForth.close()
 
         # send to Gforth to execute
-        subprocess.call(["gforth", tempForth.name])
+        returnVal = subprocess.call(["gforth", tempForth.name])
 
         os.unlink(tempForth.name) # delete the temp file
-        return 0
+        return returnVal
 
 if __name__ == "__main__":
     main()
