@@ -4,7 +4,10 @@ class ForthGen:
     # TODO: restructure to opToSym = {"T_INT": {"T_PLUS": "+", ...}, "T_FLOAT": {"T_PLUS": "f+", ...}}
     # opToSym = {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_DIV": "/", "T_GTEQ": ">=", "T_GT" : ">", "T_LTEQ" : "<", "T_LT" : "<", "T_EXP" : "^", "T_NOTEQ" : "!=", "T_NOT" : "!", "T_MOD" : "%", "T_AND" : "and", "T_OR" : "or", "T_TAN" : "tan", "T_COS" : "cos", "T_SIN" : "sin"}
     
-    opToSym = {"T_INT": {"T_GT": ">", "T_LT": "<", "T_GTEQ": ">=", "T_LTEQ": "<=", "T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*"}, "T_FLOAT": {"T_PLUS": "f+", "T_MULT": "f*", "T_SIN": "fsin", "T_COS": "fcos", "T_TAN": "ftan"}}
+    opToSym = {"T_INT": 
+               {"T_AND": "and", "T_OR": "or", "T_MOD": "mod", "T_GT": ">", "T_LT": "<", "T_GTEQ": ">=", "T_LTEQ": "<=", "T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_NOTEQ": "<>", "T_NOT": "negate"}, 
+               "T_FLOAT": 
+               {"T_PLUS": "f+", "T_MULT": "f*", "T_DIV": "f/", "T_SIN": "fsin", "T_COS": "fcos", "T_TAN": "ftan", "T_NOT": "fnegate", "T_EXP": "f**", "T_EQ": "f=", "T_NOTEQ": "f<>", "T_LT": "f<", "T_GT": "f>", "T_LTEQ": "f<=", "T_GTEQ": "f>="}}
 
     ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
 
