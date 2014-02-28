@@ -98,6 +98,7 @@ class TypeChecker:
 
                 if len(branch) > 1:
                     t2 = branch[1]["type"]
+
                     if t != t2:
                         print("Type mismatch: got %s and %s for operation %s" % (t, t2, oper))
                         self._error = True
@@ -115,7 +116,12 @@ class TypeChecker:
 
             elif ForthGen.constTok(tree.keys()) != None:
                 key = ForthGen.constTok(tree.keys())
-                return {key: tree[key], "type": key}
+                t = key
+
+                if t == "T_TRUE" or t == "T_FALSE":
+                    t = "T_BOOL"
+
+                return {key: tree[key], "type": t}
             elif tree.has_key("e"):
                 return {"e": []} # terminal branch, return up
             else:
@@ -137,10 +143,10 @@ class TypeChecker:
 
         # function with else
         if len(branch) == 3:
-            functionTree = {"T" : {"S": [{"expr": [{"forth_literal": {"cmd": ": %s " % exprName }}]}, {"S'": [{"expr": [branch[0]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "if "}}]}, {"S'": [{"expr": [branch[1]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "else "}}]}, {"S'": [{"expr": [branch[2]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "endif ; "}}]}, {"S'": [{"e": {}}]}]}]}]}]}]}]}]}}
+            functionTree = {"T" : {"S": [{"expr": [{"forth_literal": {"cmd": ": %s " % exprName }}]}, {"S'": [{"expr": [branch[0]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "if "}}]}, {"S'": [{"expr": [branch[1]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "else "}}]}, {"S'": [{"expr": [branch[2]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "endif ; "}}]}, {"S'": [{"e": []}]}]}]}]}]}]}]}]}}
 
         else:
-            functionTree = {"T" : {"S": [{"expr": [": %s " % exprName]}, {"S'": [{"expr": [branch[0]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "if "}}]}, {"S'": [{"expr": [branch[1]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "endif ; "}}]}, {"S'": [{"e": {}}]}]}]}]}]}]}}
+            functionTree = {"T" : {"S": [{"expr": [": %s " % exprName]}, {"S'": [{"expr": [branch[0]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "if "}}]}, {"S'": [{"expr": [branch[1]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "endif ; "}}]}, {"S'": [{"e": []}]}]}]}]}]}]}}
 
         self._ifFunctions.append(functionTree)
         

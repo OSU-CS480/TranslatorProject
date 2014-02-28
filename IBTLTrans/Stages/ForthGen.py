@@ -13,7 +13,7 @@ class ForthGen:
 
     ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
 
-    consts = ["T_INT", "T_BOOL", "T_CONSTSTR", "T_FLOAT"]
+    consts = ["T_INT", "T_TRUE", "T_FALSE", "T_CONSTSTR", "T_FLOAT"]
 
     # take in an instance of the type checker that has completed running
     def __init__(self, tc):

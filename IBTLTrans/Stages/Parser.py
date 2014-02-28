@@ -187,7 +187,13 @@ class Parser:
         # no left bracket
         elif self.constPred(tokens[0].t()):
             # Case 5: consts
-            newGraph[tokens[0].t()] = tokens[0].text()
+
+            if tokens[0].t() == "T_TRUE":
+                newGraph[tokens[0].t()] = "true"
+            elif tokens[0].t() == "T_FALSE":
+                newGraph[tokens[0].t()] = "false"
+            else:
+                newGraph[tokens[0].t()] = tokens[0].text()
             return (tokens[1:], False, newGraph)
 
         elif tokens[0].t() == "T_ID":
@@ -348,7 +354,7 @@ class Parser:
         return token in ["T_MINUS", "T_SIN", "T_COS", "T_TAN", "T_NOT"]
     
     def constPred(self, token):
-        return token in ["T_CONSTSTR", "T_BOOL", "T_INT", "T_FLOAT"]
+        return token in ["T_CONSTSTR", "T_TRUE", "T_FALSE", "T_INT", "T_FLOAT"]
 
     def typePred(self, token):
         return token in ["T_STRINGTYPE", "T_BOOLTYPE", "T_INTTYPE", "T_FLOATTYPE"]
