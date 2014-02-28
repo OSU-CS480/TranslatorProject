@@ -266,6 +266,9 @@ def main():
                             proc = sub.Popen(["gforth", tempForth.name], stdout=sub.PIPE, stderr=sub.PIPE)
                             (out, error) = proc.communicate()
 
+                            # remove the temp file as it's no longer needed
+                            os.unlink(tempForth.name)
+
                             if proc.returncode != 0:
                                 print("Forth returned an error value %d" % proc.returncode)
                                 failCount += 1
