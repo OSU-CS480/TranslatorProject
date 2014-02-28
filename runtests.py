@@ -177,7 +177,102 @@ def main():
                 else:
                     print("Parser test fixture succeeded")
         elif name == "constexprs":
-            print(todo)
+            files = glob.glob(os.sep.join([topLevelDir, testingDir, name, testDataDir, '*']))
+            files.sort()
+
+            inputFiles = filter(lambda x: x[-3:] == "txt", files)
+            answerFiles = filter(lambda x: x[-3:] == "ans", files)
+            failureFiles = filter(lambda x: x[-4:] == "fail", files)
+
+            if (len(inputFiles) != len(answerFiles)) or len(inputFiles) == 0:
+                print("Missing an answer file (.ans) or input file (.txt)")
+            else:
+                from IBTLTrans.Stages.Tokenizer import Tokenizer
+                from IBTLTrans.Stages.Parser import Parser
+                from IBTLTrans.Stages.TypeChecker import TypChecker
+                from IBTLTrans.Stages.ForthGen import ForthGen
+
+                # run failure tests, if any
+                failCount = 0
+                for failFile in failureFiles:
+                    fileHandle = open(failFile, "r")
+                    fileContents = fileHandle.read()
+
+                    if verbose:
+                        print("Reading in failure file %s:\n%s\n" % (failFile, fileContents))
+
+                    t = Tokenizer(fileContents)
+                    fileHandle.close()
+                    tokens = t.tokenize()
+
+                    p = Parser(tokens)
+                    p.parse()
+                    tc = TypeChecker(p.getParseTree())
+
+                    if not tc.generateAST():
+                        failCount += 1
+                        print("Type checker failed when it shouldn't have")
+
+                        if verbose:
+                            print("AST generated is %s" % str(tc))
+                    else:
+                            print("AST could not be generated, successfully")
+
+                if failCount != 0:
+                    print("%d out of %d files succeeded when they shouldn't have\n" % (failCount, len(failureFiles)))
+                else:
+                    print("Failure test cases succeeded\n")
+
+                print("Starting constant expression test fixture")
+                failCount = 0
+                for i in range(0, len(inputFiles)):
+                    # tokenize input
+                    inputFile = open(inputFiles[i], "r")
+                    contents = inputFile.read()
+                    t = Tokenizer(contents)
+                    inputFile.close()
+                    fixtureName = inputFiles[i][inputFiles[i].rfind('/') + 1:-4]
+                    tokens = t.tokenize()
+
+                    p = Parser(tokens)
+                    p.parse()
+
+                    tc = TypeChecker(p.getParseTree())
+
+                    if not tc.generateAST():
+                        print("There were type errors in this input file")
+                        failCount += 1
+                    else:
+                        forth = ForthGen(tc)
+
+                        # TODO: capture the GForth output
+
+                        if verbose:
+                            print("Reading in file %s:\n%s\n" % (inputFiles[i], contents))
+
+                    # read from answers
+                    answerFile = open(answerFiles[i], "r")
+                    answer = answerFile.read()
+
+                    answerFile.close()
+
+                    # compare
+                    if pt != answer:
+                        failCount += 1
+                        print("parse tree returned did not match the answer file")
+                        print("correct is: %s" % answer)
+
+                        if verbose:
+                            print("parse tree generated was: %s" % pt)
+                    else:
+                        if verbose:
+                            print("parse tree generated (matches answer file): %s" % pt)
+                            print("\n")
+
+                if failCount != 0:
+                    print("Parser test fixture failed. %d out of %d failed" % (failCount, len(inputFiles)))
+                else:
+                    print("Parser test fixture succeeded")
         else:
             print("Could not find test suite %s" % name)
 
