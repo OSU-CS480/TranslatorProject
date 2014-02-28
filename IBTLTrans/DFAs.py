@@ -68,6 +68,7 @@ class FloatDFA(DFA):
         self.addState('RightFloat')
         self.addState('T_FLOAT')
         self.addState('exponent')
+        self.addState('exponent_negative')
 
         self.addTransition('.', 'start', 'RightFloat')
 
@@ -82,15 +83,13 @@ class FloatDFA(DFA):
             self.addTransition(c, 'T_FLOAT', 'T_FLOAT')
 
         self.addTransition('e', 'T_FLOAT', 'exponent')
+        self.addTransition('-', 'exponent', 'exponent_negative')
         
         self.addAlternateEndState("exponent_accept", "T_FLOAT")
         for c in Utils.Utils.characterList('0', '9'):
+            self.addTransition(c, 'exponent_negative', 'exponent_accept')
             self.addTransition(c, 'exponent', 'exponent_accept')
             self.addTransition(c, 'exponent_accept', 'exponent_accept')
-        # self.addTransition('e', 'T_FLOAT', 'exponent')
-
-        # for c in Utils.Utils.characterList('0', '9'):
-        #     self.addTransition(c, 'exponent', 'T_FLOAT')
 
 class IdentifierDFA(DFA):
     def __init__(self):
