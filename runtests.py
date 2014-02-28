@@ -211,9 +211,9 @@ def main():
                     p.parse()
                     tc = TypeChecker(p.getParseTree())
 
-                    if not tc.generateAST():
+                    if tc.generateAST():
                         failCount += 1
-                        print("Type checker failed when it shouldn't have")
+                        print("Type checker succeeded when it shouldn't have")
 
                         if verbose:
                             print("AST generated is %s" % str(tc))
