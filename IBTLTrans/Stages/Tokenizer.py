@@ -72,6 +72,7 @@ class Tokenizer:
                     failedDFAs += 1
                     
                 if dfa.inAcceptingState():
+                    print(dfa)
                     acceptingDFAs += 1
 
             # did this new char cause all DFAs to fail?

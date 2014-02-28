@@ -7,18 +7,14 @@ class DFA:
         self._rules = {'start': {}, 'fail': {}}
 
         # ending on these states is equivalent to ending on the end state
-        self._alternateEndStates = []
-        self._endState = ""
+        self._alternateEndStates = {}
         
     def addState(self, id):
-        # store final state
-        if id[0:2] == "T_":
-            self._endState = id
-
         self._rules[id] = {}
 
-    def setStateToAlternateAccept(self, id):
-        self._alternateEndStates.append(id)
+    def addAlternateEndState(self, altState, endState):
+        self.addState(altState)
+        self._alternateEndStates[altState] = endState
 
     # set if this DFA should store text (useful for consts and ids)
     # does not store on default
@@ -63,7 +59,7 @@ class DFA:
         self._lastState = 'double_unread_unknown_state'
             
     def inAcceptingState(self):
-        return self._curState == self._endState or self._curState in self._alternateEndStates
+        return self._curState[0:2] == "T_" or self._alternateEndStates.has_key(self._curState)
 
     def inFailState(self):
         return self._curState == 'fail'
@@ -80,7 +76,7 @@ class DFA:
         return self._text
         
     def __str__(self):
-        if self._curState in self._alternateEndStates:
-            return self._endState
+        if self._alternateEndStates.has_key(self._curState):
+            return self._alternateEndStates[self._curState]
         else:
             return self._curState

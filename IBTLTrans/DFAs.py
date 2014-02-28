@@ -83,8 +83,7 @@ class FloatDFA(DFA):
 
         self.addTransition('e', 'T_FLOAT', 'exponent')
         
-        self.addState("exponent_accept")
-        self.setStateToAlternateAccept("exponent_accept")
+        self.addAlternateEndState("exponent_accept", "T_FLOAT")
         for c in Utils.Utils.characterList('0', '9'):
             self.addTransition(c, 'exponent', 'exponent_accept')
             self.addTransition(c, 'exponent_accept', 'exponent_accept')
