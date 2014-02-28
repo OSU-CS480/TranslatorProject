@@ -66,7 +66,6 @@ class ForthGen:
                 self.emit(tree["T_STDOUT"])
 
             elif ForthGen.operTok(tree.keys()) != None:
-                # TODO: determine how to handle casting to types (nothing about it in the assignment so far)
                 # do operations on floats and ints always cast the ints to floats?
                 # are floats ever cast back to ints?
 
@@ -81,6 +80,7 @@ class ForthGen:
                 # modify literals and constants in such a way that Forth will interpret them correctly
                 forthified = tree[const]
                 if tree["type"] == "T_FLOAT":
+                    # TODO: handle with floats that were inputted with an e
                     forthified += "e"
                 elif tree["type"] == "T_CONSTSTR":
                     forthified = self.forthStr(forthified)
