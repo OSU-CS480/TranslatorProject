@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
+import os
 import sys
 import subprocess
+import tempfile
 
 from IBTLTrans.Stages.Tokenizer import Tokenizer
 from IBTLTrans.Stages.Parser import Parser
@@ -19,11 +21,15 @@ def main():
         # read some command swittches
         showTokens = False
         showAst = False
-        showForthCode = True
+        showForthCode = False
+        stayInRepl = False # if true, don't add a bye to the outputted code
         showParseTree = False
 
         if "--lex" in sys.argv:
             showTokens = True
+
+        if "--repl" in sys.argv:
+            stayInRepl = True
         
         if "--ast" in sys.argv:
             showAst = True
@@ -54,6 +60,7 @@ def main():
         
         # print tokens if the user wants to see them
         if showTokens:
+            print("Tokens:")
             for tok in toks:
                 print(tok)
 
@@ -61,6 +68,7 @@ def main():
         p = Parser(toks)
         if p.parse():
             if showParseTree:
+                print("Parse tree:")
                 print(p)
         else:
             print("Parser failed to parse the string")
@@ -74,19 +82,31 @@ def main():
             return 1
 
         if showAst:
+            print("AST:")
             print(typeCheck)
 
         # get Forth code
-        forth = ForthGen(typeCheck.getAST())
+        forth = ForthGen(typeCheck)
         if not forth.toForth():
             print("Code could not generate Forth code from input")
             return 1
 
+        if not stayInRepl:
+            forth.addBye()
+
         if showForthCode:
+            print("Forth code:")
             print(forth.getForth())
 
+        # create new tempfile with forth code in it
+        tempForth = tempfile.NamedTemporaryFile(delete=False)
+        tempForth.write(forth.getForth())
+        tempForth.close()
+
         # send to Gforth to execute
-        subprocess.call("echo " + forth.getForth() + " | gforth", shell=True)
+        subprocess.call(["gforth", tempForth.name])
+
+        os.unlink(tempForth.name) # delete the temp file
         return 0
 
 if __name__ == "__main__":

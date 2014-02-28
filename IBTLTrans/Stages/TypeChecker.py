@@ -11,6 +11,7 @@ class TypeChecker:
     def __init__(self, pt):
         self._pt = pt
         self._ast = {}
+        self._ifFunctions = [] # store all if expressions as their own functions
         self._error = False
 
     def __str__(self):
@@ -18,6 +19,9 @@ class TypeChecker:
 
     def getAST(self):
         return self._ast
+
+    def getIfFncASTs(self):
+        return self._ifFunctions
 
     # build the ast, identify to the user if there was an error in building it
     def generateAST(self):
@@ -45,6 +49,9 @@ class TypeChecker:
             elif tree.has_key("expr"):
                 branch = self.emitAST(tree["expr"])
                 return {"expr": branch}
+            elif tree.has_key("T_IF"):
+                ifFunction = self.processIf(tree["T_IF"])
+                return {"forth_literal": {"cmd": "%s " % ifFunction }}
             elif tree.has_key("T_STDOUT"):
                 # get type of the expression for stdout to determine how to print the value
 
@@ -61,6 +68,10 @@ class TypeChecker:
                     elif t == "T_FLOAT":
                         branch[0]["cmd"] = "f. "
                         return {"T_STDOUT" : [{"forth_literal": branch[0] }]}
+                    elif t == "T_CONSTSTR":
+                        # TODO: for now, strings are immediantly printed, no stored strings, fix this
+                        # just return up the branch
+                        return {"T_STDOUT": branch}
                     else:
                         print("Not sure how to print type of %s" % t)
                         self._error = True
@@ -114,3 +125,24 @@ class TypeChecker:
         else:
             print("Error in parse tree")
             return
+
+    # tree is tree["T_IF"]
+    # 
+    # processIf takes an if expression and turns it into a function that 
+    # will be printed at the very beginning of the program
+    def processIf(self, tree):
+        branch = self.emitAST(tree)
+
+        exprName = "expr" + str(len(self._ifFunctions))
+
+        # function with else
+        if len(branch) == 3:
+            functionTree = {"T" : {"S": [{"expr": [{"forth_literal": {"cmd": ": %s " % exprName }}]}, {"S'": [{"expr": [branch[0]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "if "}}]}, {"S'": [{"expr": [branch[1]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "else "}}]}, {"S'": [{"expr": [branch[2]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "endif ; "}}]}, {"S'": [{"e": {}}]}]}]}]}]}]}]}]}}
+
+        else:
+            functionTree = {"T" : {"S": [{"expr": [": %s " % exprName]}, {"S'": [{"expr": [branch[0]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "if "}}]}, {"S'": [{"expr": [branch[1]]}, {"S'": [{"expr": [{"forth_literal": {"cmd": "endif ; "}}]}, {"S'": [{"e": {}}]}]}]}]}]}]}}
+
+        self._ifFunctions.append(functionTree)
+        
+        # return up a forth_literal to call the function
+        return exprName

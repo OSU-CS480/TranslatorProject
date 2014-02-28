@@ -4,20 +4,32 @@ class ForthGen:
     # TODO: restructure to opToSym = {"T_INT": {"T_PLUS": "+", ...}, "T_FLOAT": {"T_PLUS": "f+", ...}}
     # opToSym = {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_DIV": "/", "T_GTEQ": ">=", "T_GT" : ">", "T_LTEQ" : "<", "T_LT" : "<", "T_EXP" : "^", "T_NOTEQ" : "!=", "T_NOT" : "!", "T_MOD" : "%", "T_AND" : "and", "T_OR" : "or", "T_TAN" : "tan", "T_COS" : "cos", "T_SIN" : "sin"}
     
-    opToSym = {"T_INT": {"T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*"}, "T_FLOAT": {"T_PLUS": "f+", "T_MULT": "f*", "T_SIN": "fsin", "T_COS": "fcos", "T_TAN": "ftan"}}
+    opToSym = {"T_INT": {"T_GT": ">", "T_LT": "<", "T_GTEQ": ">=", "T_LTEQ": "<=", "T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*"}, "T_FLOAT": {"T_PLUS": "f+", "T_MULT": "f*", "T_SIN": "fsin", "T_COS": "fcos", "T_TAN": "ftan"}}
 
     ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
 
-    consts = ["T_INT", "T_BOOL", "TCONSTSTR", "T_FLOAT"]
+    consts = ["T_INT", "T_BOOL", "T_CONSTSTR", "T_FLOAT"]
 
-    def __init__(self, ast):
-        self._ast = ast
+    # take in an instance of the type checker that has completed running
+    def __init__(self, tc):
+        self._tc = tc
+        self._ast = tc.getAST()
+        self._ifASTs = tc.getIfFncASTs()
+
         self._cmds = ""
         self._error = False
 
     def toForth(self):
+        # first, emit each if function
+        for fnc in self._ifASTs:
+            self.emit(fnc["T"])
+            self._cmds += "\n" # astetically only
+
         self.emit(self._ast["T"])
         return not self._error
+
+    def addBye(self):
+        self._cmds += "bye"
 
     def getForth(self):
         return self._cmds
@@ -75,6 +87,7 @@ class ForthGen:
     # format a string literal for output by Forth
     # the string returned, when seen by forth will cause it to be immediantly printed
     def forthStr(self, s):
+        s = s[1:-1] # strip off quotes
         s.replace("\n", " \" CR .\"") # replace all newlines
 
         # remove extra quotes at the end if the string ended in a newline
@@ -83,7 +96,7 @@ class ForthGen:
 
         # TODO: replace tabs and other \ deliminated chars
 
-        return ".\" %s "
+        return ".\" %s \"" % s
 
     @classmethod
     def operTok(cls, keys):
