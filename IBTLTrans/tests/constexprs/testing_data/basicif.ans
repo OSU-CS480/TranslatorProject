@@ -1,1 +1,2 @@
-2 > 1
+: expr0 2 1 > if ." 2 > 1" else ." should not happen" endif ; 
+expr0 bye
