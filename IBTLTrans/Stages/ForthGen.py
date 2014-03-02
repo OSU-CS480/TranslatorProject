@@ -80,8 +80,8 @@ class ForthGen:
                 # modify literals and constants in such a way that Forth will interpret them correctly
                 forthified = tree[const]
                 if tree["type"] == "T_FLOAT":
-                    # TODO: handle with floats that were inputted with an e
-                    forthified += "e"
+                    if not ("e" in forthified):
+                        forthified += "e"
                 elif tree["type"] == "T_CONSTSTR":
                     forthified = self.forthStr(forthified)
                 elif tree["type"] == "T_BOOL":
