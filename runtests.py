@@ -257,42 +257,57 @@ def main():
                         else:
                             forth.addBye()
 
-                            # write this forth code in a temp file
-                            tempForth = tempfile.NamedTemporaryFile(delete=False)
-                            tempForth.write(forth.getForth())
-                            tempForth.close()
+                            answerFile = open(answerFiles[i], "r")
+                            answer = answerFile.read()
+                            answerFile.close()
 
-                            # capture the GForth output
-                            proc = sub.Popen(["gforth", tempForth.name], stdout=sub.PIPE, stderr=sub.PIPE)
-                            (out, error) = proc.communicate()
-
-                            # remove the temp file as it's no longer needed
-                            os.unlink(tempForth.name)
-
-                            if proc.returncode != 0:
-                                print("Forth returned an error value %d" % proc.returncode)
-                                failCount += 1
+                            # bye for byte comparison with generated forth code
+                            if answer == forth.getForth():
+                                if verbose:
+                                    print("Forth code matched")
                             else:
-                                if out == None:
-                                    out = ""
+                                failCount += 1
 
-                                if error != None and error != "" and verbose:
-                                    print("Forth wrote: `%s' to standard error" % error)
+                                print("Forth code generated did not match answer file")
+                                if verbose:
+                                    print("Forth generated is\n%s" % forth.getForth())
 
-                                # compare to answer file
-                                answerFile = open(answerFiles[i], "r")
-                                answer = answerFile.read()
-                                answerFile.close()
+                            # # write this forth code in a temp file
+                            # tempForth = tempfile.NamedTemporaryFile(delete=False)
+                            # tempForth.write(forth.getForth())
+                            # tempForth.close()
 
-                                if out == answer:
-                                    if verbose:
-                                        print("Forth output matched what was expected")
-                                else:
-                                    failCount += 1
-                                    print("Forth output didn't match expected output")
+                            # # capture the GForth output
+                            # proc = sub.Popen(["gforth", tempForth.name], stdout=sub.PIPE, stderr=sub.PIPE)
+                            # (out, error) = proc.communicate()
 
-                                    if verbose:
-                                        print("Expected `%s'\nGot `%s'" % (answer, out))
+                            # # remove the temp file as it's no longer needed
+                            # os.unlink(tempForth.name)
+
+                            # if proc.returncode != 0:
+                            #     print("Forth returned an error value %d" % proc.returncode)
+                            #     failCount += 1
+                            # else:
+                            #     if out == None:
+                            #         out = ""
+
+                            #     if error != None and error != "" and verbose:
+                            #         print("Forth wrote: `%s' to standard error" % error)
+
+                            #     # compare to answer file
+                            #     answerFile = open(answerFiles[i], "r")
+                            #     answer = answerFile.read()
+                            #     answerFile.close()
+
+                            #     if out == answer:
+                            #         if verbose:
+                            #             print("Forth output matched what was expected")
+                            #     else:
+                            #         failCount += 1
+                            #         print("Forth output didn't match expected output")
+
+                            #         if verbose:
+                            #             print("Expected `%s'\nGot `%s'" % (answer, out))
 
                 if failCount != 0:
                     print("Constexpr test fixture failed. %d out of %d failed" % (failCount, len(inputFiles)))
