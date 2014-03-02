@@ -5,13 +5,13 @@ class ForthGen:
     # T_BOOL is just used to denote the type of an equation
 
     opToSym = {"T_INT": 
-               {"T_AND": "and", "T_OR": "or", "T_MOD": "mod", "T_GT": ">", "T_LT": "<", "T_GTEQ": ">=", "T_LTEQ": "<=", "T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_NOTEQ": "<>", "T_NOT": "negate"}, 
+               {"T_AND": "and", "T_OR": "or", "T_MOD": "mod", "T_GT": ">", "T_LT": "<", "T_GTEQ": ">=", "T_LTEQ": "<=", "T_PLUS": "+", "T_MINUS": "-", "T_MULT": "*", "T_EQ": "=", "T_NOTEQ": "<>", "T_NOT": "negate"}, 
                "T_FLOAT": 
                {"T_PLUS": "f+", "T_MULT": "f*", "T_DIV": "f/", "T_SIN": "fsin", "T_COS": "fcos", "T_TAN": "ftan", "T_NOT": "fnegate", "T_EXP": "f**", "T_EQ": "f=", "T_NOTEQ": "f<>", "T_LT": "f<", "T_GT": "f>", "T_LTEQ": "f<=", "T_GTEQ": "f>="},
                "T_BOOL":
                    {"T_AND": "and", "T_OR": "or", "T_NOT": "negate"}}
 
-    ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN"]
+    ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN", "T_EQ"]
 
     consts = ["T_INT", "T_TRUE", "T_FALSE", "T_CONSTSTR", "T_FLOAT"]
 
