@@ -85,7 +85,7 @@ class ForthGen:
                 elif tree["type"] == "T_CONSTSTR":
                     forthified = self.forthStr(forthified)
                 elif tree["type"] == "T_BOOL":
-                    if tree[const] == "T_TRUE":
+                    if tree[const] == "true":
                         forthified = "1"
                     else:
                         forthified = "0"
