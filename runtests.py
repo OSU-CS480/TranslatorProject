@@ -271,6 +271,7 @@ def main():
                                 print("Forth code generated did not match answer file")
                                 if verbose:
                                     print("Forth generated is\n%s" % forth.getForth())
+                                    print("Answer file is\n%s" % answer)
 
                             # # write this forth code in a temp file
                             # tempForth = tempfile.NamedTemporaryFile(delete=False)
