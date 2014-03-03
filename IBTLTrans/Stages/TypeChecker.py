@@ -82,6 +82,10 @@ class TypeChecker:
                 oper = ForthGen.operTok(tree.keys())
                 branch = self.emitAST(tree[oper])
 
+                # special case for using T_MINUS as negate
+                if oper == "T_MINUS" and len(branch) == 1:
+                    return self.negateToNegativeMult(branch)
+
                 # TODO: right now types returned by operations are assumed to be the type of their inputs
                 # this is not always true
 
@@ -162,3 +166,21 @@ class TypeChecker:
         
         # return up a forth_literal to call the function
         return exprName
+
+    # return up a modified branch, replacing the - with an explicit mulitply by -1
+    def negateToNegativeMult(self, branch):
+        # basic type check, the expr in here should be a float or int
+        t = branch[0]["type"]
+
+        if not (t == "T_FLOAT" or t == "T_INT"):
+            self._error = True
+            print("Type error: type %s used with T_MINUS (can only use T_INT or T_FLOAT)" % t)
+            return
+
+        if t == "T_FLOAT":
+            negOne = "-1.0e"
+
+        if t == "T_INT":
+            negOne = "-1"
+
+        return {"T_MULT": [{"expr": branch[0]}, {t: negOne, "type": t}], "type": t}
