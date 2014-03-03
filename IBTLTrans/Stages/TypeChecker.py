@@ -11,6 +11,9 @@ class TypeChecker:
         self._pt = pt
         self._ast = {}
         self._ifFunctions = [] # store all if expressions as their own functions
+
+        self._extraFncs = [] # extra functions that must be programmed in direct forth
+        self._addedPowFnc = False # used so these definitions are only added once
         self._error = False
 
     def __str__(self):
@@ -21,6 +24,9 @@ class TypeChecker:
 
     def getIfFncASTs(self):
         return self._ifFunctions
+
+    def getExtraFncASTs(self):
+        return self._extraFncs
 
     # build the ast, identify to the user if there was an error in building it
     def generateAST(self):
@@ -81,6 +87,11 @@ class TypeChecker:
             elif ForthGen.operTok(tree.keys()) != None:
                 oper = ForthGen.operTok(tree.keys())
                 branch = self.emitAST(tree[oper])
+
+                # determine if this function needs to be added in
+                if oper == "T_EXP" and not self._addedPowFnc:
+                    self._addedPowFnc = True
+                    self.addPowFnc()
 
                 # SPECIAL CASES
 
@@ -193,3 +204,10 @@ class TypeChecker:
     # cast a unop to a desired type
     def unopFloatCast(self, branch, oper, castTo):
         return {"type": castTo, oper: [{"expr": branch}, {"forth_literal": {"cmd": "s>f "}}]}
+
+    def addPowFnc(self):
+        # 1 swap swap ?do dup * loop ;
+
+        self._extraFncs.append({"T": {"S": [{"forth_literal": {"cmd": ": pow_fnc 1 swap swap ?do dup * loop ;\n"}}, {"S'": [{"e": []}]}]}})
+
+

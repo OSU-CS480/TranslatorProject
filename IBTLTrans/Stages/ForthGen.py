@@ -5,7 +5,7 @@ class ForthGen:
     # T_BOOL is just used to denote the type of an equation
 
     opToSym = {"T_INT": 
-               {"T_AND": "and", "T_OR": "or", "T_MOD": "mod", "T_GT": ">", "T_LT": "<", "T_GTEQ": ">=", "T_LTEQ": "<=", "T_PLUS": "+", "T_MINUS": "-", "T_DIV": "/", "T_MULT": "*", "T_EQ": "=", "T_NOTEQ": "<>", "T_NOT": "negate"}, 
+               {"T_AND": "and", "T_OR": "or", "T_MOD": "mod", "T_GT": ">", "T_LT": "<", "T_GTEQ": ">=", "T_LTEQ": "<=", "T_PLUS": "+", "T_MINUS": "-", "T_DIV": "/", "T_MULT": "*", "T_EQ": "=", "T_NOTEQ": "<>", "T_NOT": "negate", "T_EXP": "pow_fnc"}, 
                "T_FLOAT": 
                {"T_PLUS": "f+", "T_MULT": "f*", "T_DIV": "f/", "T_SIN": "fsin", "T_COS": "fcos", "T_TAN": "ftan", "T_NOT": "fnegate", "T_EXP": "f**", "T_EQ": "f=", "T_MINUS": "f-", "T_NOTEQ": "f<>", "T_LT": "f<", "T_GT": "f>", "T_LTEQ": "f<=", "T_GTEQ": "f>="},
                "T_BOOL":
@@ -22,11 +22,18 @@ class ForthGen:
         self._ast = tc.getAST()
         self._ifASTs = tc.getIfFncASTs()
 
+        self._extraASTs = tc.getExtraFncASTs()
+
         self._cmds = ""
         self._error = False
 
     def toForth(self):
-        # first, emit each if function
+        # emit any extra function definitions
+        for fnc in self._extraASTs:
+            self.emit(fnc["T"])
+            self._cmds += "\n"
+
+        # emit each if function
         for fnc in self._ifASTs:
             self.emit(fnc["T"])
             self._cmds += "\n" # astetically only
