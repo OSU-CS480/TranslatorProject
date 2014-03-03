@@ -11,7 +11,8 @@ class ForthGen:
                "T_BOOL":
                    {"T_AND": "and", "T_OR": "or", "T_NOT": "negate"}}
 
-    ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_TAN", "T_COS", "T_SIN", "T_EQ"]
+    trigUnops = ["T_TAN", "T_COS", "T_SIN"]
+    ops = ["T_PLUS", "T_MINUS", "T_MULT", "T_DIV", "T_GTEQ", "T_GT", "T_LTEQ", "T_LT", "T_EXP", "T_NOTEQ", "T_NOT", "T_MOD", "T_AND", "T_OR", "T_EQ"] + trigUnops
 
     consts = ["T_INT", "T_TRUE", "T_FALSE", "T_CONSTSTR", "T_FLOAT"]
 

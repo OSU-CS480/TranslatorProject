@@ -82,9 +82,14 @@ class TypeChecker:
                 oper = ForthGen.operTok(tree.keys())
                 branch = self.emitAST(tree[oper])
 
+                # SPECIAL CASES
+
                 # special case for using T_MINUS as negate
                 if oper == "T_MINUS" and len(branch) == 1:
                     return self.negateToNegativeMult(branch)
+
+                if oper in ForthGen.trigUnops and branch[0]["type"] == "T_INT":
+                    return self.unopFloatCast(branch, oper, "T_FLOAT")
 
                 # TODO: right now types returned by operations are assumed to be the type of their inputs
                 # this is not always true
@@ -184,3 +189,7 @@ class TypeChecker:
             negOne = "-1"
 
         return {"T_MULT": [{"expr": branch[0]}, {t: negOne, "type": t}], "type": t}
+
+    # cast a unop to a desired type
+    def unopFloatCast(self, branch, oper, castTo):
+        return {"type": castTo, oper: [{"expr": branch}, {"forth_literal": {"cmd": "s>f "}}]}
