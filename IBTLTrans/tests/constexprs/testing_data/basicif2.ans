@@ -1,0 +1,2 @@
+: expr0 3 4 + 7 = if ." 7" else ." bad" endif ; 
+expr0 bye
