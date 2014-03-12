@@ -57,6 +57,9 @@ class TypeChecker:
             elif tree.has_key("T_IF"):
                 ifFunction = self.processIf(tree["T_IF"])
                 return {"forth_literal": {"cmd": "%s " % ifFunction }}
+            elif tree.has_key("T_LET"):
+                letFnc = self.processLet(tree["T_LET"])
+                return {"forth_literal": { "cmd": "%s " % letFnc }}
             elif tree.has_key("T_STDOUT"):
                 # get type of the expression for stdout to determine how to print the value
 
@@ -65,8 +68,9 @@ class TypeChecker:
                 if branch[0]["expr"][0].has_key("type"):
                     t = branch[0]["expr"][0]["type"]
 
-                    if t == "T_INT":
+                    if t == "T_INT" or t == "T_BOOL":
                         # add new node to ast to signal to forth to print out
+                        # handle ints and bools the same, both are on the int stack
 
                         branch[0]["cmd"] = ". " # this forth code will be added after evaling the expr
                         return {"T_STDOUT" : [{"forth_literal": branch[0] }]}
@@ -128,6 +132,10 @@ class TypeChecker:
                         exprType = "T_FLOAT"
                         branch[1] = [{"expr": [branch[1], {"forth_literal": {"cmd": "s>f "}}]}]
                         recast = True
+                    elif t == "T_CONSTSTR" and t2 == "T_CONSTSTR":
+                        
+                        # return from here since there are multiple operators to do string concat
+                        return self.processStrConcat(branch[0], branch[1])
 
                     if t != t2 and not recast:
                         print("Type mismatch: got %s and %s for operation %s" % (t, t2, oper))
@@ -183,6 +191,12 @@ class TypeChecker:
         # return up a forth_literal to call the function
         return exprName
 
+    def processLet(self, branch):
+        print(todo)
+
+    def processStrConcat(self, lBranch, rBranch):
+        print(todo)
+
     # return up a modified branch, replacing the - with an explicit mulitply by -1
     def negateToNegativeMult(self, branch):
         # basic type check, the expr in here should be a float or int
@@ -207,7 +221,6 @@ class TypeChecker:
 
     def addPowFnc(self):
         # 1 swap swap ?do dup * loop ;
-
         self._extraFncs.append({"T": {"S": [{"forth_literal": {"cmd": ": pow_fnc 1 swap swap ?do dup * loop ;\n"}}, {"S'": [{"e": []}]}]}})
 
 
