@@ -78,6 +78,7 @@ class FloatDFA(DFA):
             self.addTransition(c, 'LeftFloat', 'LeftFloat')
 
         self.addTransition('.', 'LeftFloat', 'T_FLOAT')
+        self.addTransition('e', 'LeftFloat', 'exponent')
 
         for c in Utils.Utils.characterList('0', '9'):
             self.addTransition(c, 'T_FLOAT', 'T_FLOAT')
