@@ -102,17 +102,26 @@ class ForthGen:
 
     # format a string literal for output by Forth
     # the string returned, when seen by forth will cause it to be immediantly printed
-    def forthStr(self, s):
+    def forthStr(self, s, dotQuote=False):
         s = s[1:-1] # strip off quotes
-        s = s.replace("\\n", "\" CR .\" ") # replace all newlines
+
+        if dotQuote:
+            s = s.replace("\\n", "\" CR .\" ") # replace all newlines
+        else:
+            s = s.replace("\\n", "\" CR s\" ") # replace all newlines
 
         # remove extra quotes at the end if the string ended in a newline
-        if s[-3:] == " .\"":
+        if dotQuote and s[-3:] == " .\"":
+            s = s[:-3]
+        elif (not dotQuote) and s[-3:] == " s\"":
             s = s[:-3]
  
         # TODO: replace tabs and other \ deliminated chars
 
-        return ".\" %s\"" % s
+        if dotQuote:
+            return ".\" %s\"" % s
+        else:
+            return "s\" %s\"" % s
 
     @classmethod
     def operTok(cls, keys):

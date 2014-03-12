@@ -65,6 +65,8 @@ class TypeChecker:
 
                 branch = self.emitAST(tree["T_STDOUT"])
 
+                print("here")
+                print(branch)
                 if branch[0]["expr"][0].has_key("type"):
                     t = branch[0]["expr"][0]["type"]
 
@@ -78,8 +80,19 @@ class TypeChecker:
                         branch[0]["cmd"] = "f. "
                         return {"T_STDOUT" : [{"forth_literal": branch[0] }]}
                     elif t == "T_CONSTSTR":
-                        # TODO: for now, strings are immediantly printed, no stored strings, fix this
                         # just return up the branch
+
+                        # if this is printing out a const string, then pad it
+                        forthCmd = "pad count type "
+                        if branch[0]['expr'][0]['type'] == "T_CONSTSTR":
+                            # pad place makes the string
+                            forthCmd = "pad place " + forthCmd
+
+                        # pad count type prints out the string on the stack
+                        branch[0]['expr'].append({'forth_literal': {'cmd': forthCmd}})
+                        return {"T_STDOUT": branch}
+                    elif t == "T_STRING":
+                        branch[0]['expr'].append({'forth_literal': {'cmd': "pad count type "}})
                         return {"T_STDOUT": branch}
                     else:
                         print("Not sure how to print type of %s" % t)
@@ -133,8 +146,12 @@ class TypeChecker:
                         branch[1] = [{"expr": [branch[1], {"forth_literal": {"cmd": "s>f "}}]}]
                         recast = True
                     elif t == "T_CONSTSTR" and t2 == "T_CONSTSTR":
-                        
+                        print("2 consts")
                         # return from here since there are multiple operators to do string concat
+                        return self.processStrConcat(branch[0], branch[1])
+
+                    elif (t == "T_CONSTSTR" and t2 == "T_STRING") or (t == "T_STRING" and t2 == "T_CONSTSTR"):
+                        print("const and a str")
                         return self.processStrConcat(branch[0], branch[1])
 
                     if t != t2 and not recast:
@@ -195,7 +212,14 @@ class TypeChecker:
         print(todo)
 
     def processStrConcat(self, lBranch, rBranch):
-        print(todo)
+        print("here4")
+        newBranch = {'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}]}]}
+
+        newBranch['expr'][1]['expr'].append({'expr': [rBranch, {'forth_literal': {'cmd': 'pad +place '}}]})
+
+        newExpr = {'expr': newBranch, 'type': 'T_STRING'}
+        return newExpr
+        #return {'type': 'T_STRING', 'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}, {'expr': [rBranch, {'forth_literal': {'cmd': 'pad +place '}}]}]}]}
 
     # return up a modified branch, replacing the - with an explicit mulitply by -1
     def negateToNegativeMult(self, branch):
@@ -222,5 +246,3 @@ class TypeChecker:
     def addPowFnc(self):
         # 1 swap swap ?do dup * loop ;
         self._extraFncs.append({"T": {"S": [{"forth_literal": {"cmd": ": pow_fnc 1 swap swap ?do dup * loop ;\n"}}, {"S'": [{"e": []}]}]}})
-
-
