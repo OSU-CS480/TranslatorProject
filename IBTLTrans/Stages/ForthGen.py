@@ -21,6 +21,7 @@ class ForthGen:
         self._tc = tc
         self._ast = tc.getAST()
         self._ifASTs = tc.getIfFncASTs()
+        self._whileASTs = tc.getWhileFncASTs()
 
         self._extraASTs = tc.getExtraFncASTs()
 
@@ -37,6 +38,11 @@ class ForthGen:
         for fnc in self._ifASTs:
             self.emit(fnc["T"])
             self._cmds += "\n" # astetically only
+
+        # emit each while function
+        for fnc in self._whileASTs:
+            self.emit(fnc["T"])
+            self._cmds += "\n"
 
         self.emit(self._ast["T"])
         return not self._error

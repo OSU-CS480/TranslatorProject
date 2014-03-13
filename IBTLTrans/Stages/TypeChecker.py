@@ -11,6 +11,7 @@ class TypeChecker:
         self._pt = pt
         self._ast = {}
         self._ifFunctions = [] # store all if expressions as their own functions
+        self._whileFunctions = [] # whiles also need to be compiled
 
         self._extraFncs = [] # extra functions that must be programmed in direct forth
         self._addedPowFnc = False # used so these definitions are only added once
@@ -24,6 +25,9 @@ class TypeChecker:
 
     def getIfFncASTs(self):
         return self._ifFunctions
+
+    def getWhileFncASTs(self):
+        return self._whileFunctions
 
     def getExtraFncASTs(self):
         return self._extraFncs
@@ -57,6 +61,9 @@ class TypeChecker:
             elif tree.has_key("T_IF"):
                 ifFunction = self.processIf(tree["T_IF"])
                 return {"forth_literal": {"cmd": "%s " % ifFunction }}
+            elif tree.has_key("T_WHILE"):
+                whileFnc = self.processWhile(tree["T_WHILE"])
+                return {"forth_literal": {"cmd": "%s " % whileFnc }}
             elif tree.has_key("T_LET"):
                 letFnc = self.processLet(tree["T_LET"])
                 return {"forth_literal": { "cmd": "%s " % letFnc }}
@@ -194,7 +201,9 @@ class TypeChecker:
     def processIf(self, tree):
         branch = self.emitAST(tree)
 
-        exprName = "expr" + str(len(self._ifFunctions))
+        exprName = "ifexpr" + str(len(self._ifFunctions))
+
+        # TODO: check if the condition of the if expression is of type T_BOOL
 
         # function with else
         if len(branch) == 3:
@@ -208,17 +217,52 @@ class TypeChecker:
         # return up a forth_literal to call the function
         return exprName
 
+    def processWhile(self, tree):
+        condition = tree[0]
+
+        # emit the ast for the condition and get it's type
+        conditionBranch = self.emitAST(condition)
+
+        # type of the conditionbranch must be boolean
+        # TODO: modify ForthGen so that operators that take in ints like > and < have the return type of bool instead of int
+        # if conditionBranch["type"] != "T_BOOL":
+        #     self._error = True
+
+        # remove the first branch as it's the condition
+        branch = self.emitAST(tree[1:])
+
+        exprName = "whileexpr" + str(len(self._whileFunctions))
+
+        # violating the production that an expr should only have two nodes, will still emit correctly
+        # splice in the rest of the while expression into the returned up branch
+        branch.append({"expr": [{"forth_literal": {"cmd": "dup while "}}, conditionBranch, {"forth_literal": {"cmd": "repeat "}}]})
+
+        fncTree = {"T" : {"S": [{"expr": [{"forth_literal": {"cmd": ": %s begin " % exprName}}, {"expr": branch}]}]}}
+        self._whileFunctions.append(fncTree)
+
+        return exprName
+
     def processLet(self, branch):
         print(todo)
 
+    # encode forth_literals that will correctly append the strings
+    # TODO: fix for muliple concats
     def processStrConcat(self, lBranch, rBranch):
-        print("here4")
-        newBranch = {'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}]}]}
+        if lBranch['type'] == "T_CONSTSTR":
+            newBranch = {'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}]}]}
+        else:
+            newBranch = {'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad +place '}}]}]}
 
         newBranch['expr'][1]['expr'].append({'expr': [rBranch, {'forth_literal': {'cmd': 'pad +place '}}]})
+        return {'expr': newBranch, 'type': 'T_STRING'}
+        # newBranch = {'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}]}]}
 
-        newExpr = {'expr': newBranch, 'type': 'T_STRING'}
-        return newExpr
+        # newBranch['expr'][1]['expr'].append({'expr': [rBranch, {'forth_literal': {'cmd': 'pad +place '}}]})
+
+        # newExpr = {'expr': newBranch, 'type': 'T_STRING'}
+        # return newExpr
+
+        # working code for single concats only
         #return {'type': 'T_STRING', 'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}, {'expr': [rBranch, {'forth_literal': {'cmd': 'pad +place '}}]}]}]}
 
     # return up a modified branch, replacing the - with an explicit mulitply by -1
