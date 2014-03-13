@@ -15,7 +15,7 @@ def main():
     if len(sys.argv) < 2 and sys.stdin.isatty():
         print("Usage translator.py <filename> [--lex,--parse,--ast, --forth]")
         print("\t--lex: show tokens\n\t--ast: show the abstract syntax tree generated")
-        print("\t--parse: show parse tree\n\t--forth: show the forth code that is generated")
+        print("\t--parse: show parse tree\n\t--forth: show the forth code that is generated\n\t--halt: don't run the generated code")
     else:
 
         # read some command swittches
@@ -24,6 +24,7 @@ def main():
         showForthCode = False
         stayInRepl = False # if true, don't add a bye to the outputted code
         showParseTree = False
+        runForthCode = True
 
         if "--lex" in sys.argv:
             showTokens = True
@@ -39,6 +40,9 @@ def main():
 
         if "--parse" in sys.argv:
             showParseTree = True
+
+        if "--halt" in sys.argv:
+            runForthCode = False
 
         # stackoverflow.com/a/6024166/854854
 
@@ -98,16 +102,19 @@ def main():
             print("Forth code:")
             print(forth.getForth())
 
-        # create new tempfile with forth code in it
-        tempForth = tempfile.NamedTemporaryFile(delete=False)
-        tempForth.write(forth.getForth())
-        tempForth.close()
+        if runForthCode:
+            # create new tempfile with forth code in it
+            tempForth = tempfile.NamedTemporaryFile(delete=False)
+            tempForth.write(forth.getForth())
+            tempForth.close()
 
-        # send to Gforth to execute
-        returnVal = subprocess.call(["gforth", tempForth.name])
+            # send to Gforth to execute
+            returnVal = subprocess.call(["gforth", tempForth.name])
 
-        os.unlink(tempForth.name) # delete the temp file
-        return returnVal
+            os.unlink(tempForth.name) # delete the temp file
+            return returnVal
+        else:
+            return 0
 
 if __name__ == "__main__":
     main()
