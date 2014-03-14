@@ -226,6 +226,18 @@ class TypeChecker:
                     print("Type error: type %s has no operations associated with it" % exprType)
                     self._error = True
 
+            elif tree.has_key("T_ID"):
+                # see if this id is a float or non float id
+                ident = tree["T_ID"]
+
+                if ident in self._variables:
+                    return {"forth_literal": {"cmd": "%s @ " % ident}}
+                elif ident in self._floatVariables:
+                    return {"forth_literal": {"cmd": "%s f@ " % ident}}
+                else:
+                    self._error = True
+                    print("Undefined variable %s" % ident)
+
             elif ForthGen.constTok(tree.keys()) != None:
                 key = ForthGen.constTok(tree.keys())
                 t = key
