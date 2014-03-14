@@ -231,9 +231,10 @@ class TypeChecker:
                 ident = tree["T_ID"]
 
                 if ident in self._variables:
-                    return {"forth_literal": {"cmd": "%s @ " % ident}}
+                    # TODO: for now, these are going to just be either ints or floats
+                    return {"forth_literal": {"cmd": "%s @ " % ident}, "type": "T_INT"}
                 elif ident in self._floatVariables:
-                    return {"forth_literal": {"cmd": "%s f@ " % ident}}
+                    return {"forth_literal": {"cmd": "%s f@ " % ident}, "type": "T_FLOAT"}
                 else:
                     self._error = True
                     print("Undefined variable %s" % ident)
