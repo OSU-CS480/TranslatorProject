@@ -13,7 +13,7 @@ const -> T_FLOAT | T_TRUE | T_FALSE | T_INT | T_CONSTSTR
 
 exprlist -> expr | expr exprlist
 
-varlist -> [type T_ID] | [type T_ID] varlist
+varlist -> [T_ID type] | [T_ID type] varlist
 
 stmt -> ifstmt | whilestmt | letstmt | printstmt
 
