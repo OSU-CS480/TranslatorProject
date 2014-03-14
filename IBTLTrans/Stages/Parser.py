@@ -304,8 +304,8 @@ class Parser:
         newGraph = {}
         exprs = []
 
-        if tokens[0].t() == "T_LBRACKET" and self.typePred(tokens[1].t()) and tokens[2].t() == "T_ID" and tokens[3].t() == "T_RBRACKET":
-            exprs.append({"type": tokens[1].t(), "identifier": tokens[2].text()})
+        if tokens[0].t() == "T_LBRACKET" and self.typePred(tokens[2].t()) and tokens[1].t() == "T_ID" and tokens[3].t() == "T_RBRACKET":
+            exprs.append({"type": tokens[2].t(), "identifier": tokens[1].text()})
 
             # base case
             if tokens[4].t() == "T_RBRACKET":
