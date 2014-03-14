@@ -105,26 +105,24 @@ class TypeChecker:
                 # process oper to assign
                 branch = self.emitAST(tree["T_ASSIGN"][1])
 
-                # branch type mus match variable type
+                # branch type must match variable type, or be casted
+                cast = "" # forth_literal to use a casting operator
                 if isFloat and branch["type"] != "T_FLOAT":
-                    self._error = True
-                    print("Assigning a %s type operation to float %s" % (branch["type"], ident))
+                    cast = "s>f "
                 elif not isFloat and branch["type"] == "T_FLOAT":
-                    self._error = True
-                    print("Assigning a float type operation to a non float variable %s" % ident)
+                    cast = "f>s "
 
                 # return up a new branch that stores the variable
                 if not isFloat:
-                    return {"expr": [branch, {"forth_literal": {"cmd": "%s ! " % ident}}]}
+                    return {"expr": [branch, {"forth_literal": {"cmd": "%s%s ! " % (cast, ident)}}]}
                 else:
-                    return {"expr": [branch, {"forth_literal": {"cmd": "%s f! " % ident}}]}
+                    return {"expr": [branch, {"forth_literal": {"cmd": "%s%s f! " % (cast, ident)}}]}
 
             elif tree.has_key("T_STDOUT"):
                 # get type of the expression for stdout to determine how to print the value
 
                 branch = self.emitAST(tree["T_STDOUT"])
 
-                print(branch)
                 if branch[0]["expr"][0].has_key("type"):
                     t = branch[0]["expr"][0]["type"]
 
