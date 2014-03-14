@@ -22,6 +22,8 @@ class ForthGen:
         self._ast = tc.getAST()
         self._ifASTs = tc.getIfFncASTs()
         self._whileASTs = tc.getWhileFncASTs()
+        
+        (self._variables, self._floatVariables) = tc.getVariables()
 
         self._extraASTs = tc.getExtraFncASTs()
 
@@ -33,6 +35,12 @@ class ForthGen:
         for fnc in self._extraASTs:
             self.emit(fnc["T"])
             self._cmds += "\n"
+
+        for var in self._variables:
+            self._cmds += "Variable %s\n" % var
+
+        for fvar in self._floatVariables:
+            self._cmds += "fvariable %s\n" % var
 
         # emit each if function
         for fnc in self._ifASTs:

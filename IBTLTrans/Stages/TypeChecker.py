@@ -12,6 +12,8 @@ class TypeChecker:
         self._ast = {}
         self._ifFunctions = [] # store all if expressions as their own functions
         self._whileFunctions = [] # whiles also need to be compiled
+        self._variables = []
+        self._floatVariables = []
 
         self._extraFncs = [] # extra functions that must be programmed in direct forth
         self._addedPowFnc = False # used so these definitions are only added once
@@ -22,6 +24,9 @@ class TypeChecker:
 
     def getAST(self):
         return self._ast
+
+    def getVariables(self):
+        return (self._variables, self._floatVariables)
 
     def getIfFncASTs(self):
         return self._ifFunctions
@@ -64,15 +69,60 @@ class TypeChecker:
             elif tree.has_key("T_WHILE"):
                 whileFnc = self.processWhile(tree["T_WHILE"])
                 return {"forth_literal": {"cmd": "%s " % whileFnc }}
+            # let does not emit any code, it just stores variables
+            # TODO: deal with variable scope later
             elif tree.has_key("T_LET"):
-                letFnc = self.processLet(tree["T_LET"])
-                return {"forth_literal": { "cmd": "%s " % letFnc }}
+                self.emitAST(tree["T_LET"][0])
+            elif tree.has_key("var"):
+                self.emitAST(tree["var"])
+            elif tree.has_key("identifier"):
+                ident = tree["identifier"]
+                if tree["type"] == "T_FLOATTYPE":
+                    # TODO: fix vars that conflict with forth keywords
+                    if not (ident in self._floatVariables) and not (ident in self._variables):
+                        self._floatVariables.append(ident)
+                    else:
+                        print("Redeclared identifier float %s" % ident)
+                else:
+                    if not (ident in self._variables) and not (ident in self._floatVariables):
+                        self._variables.append(ident)
+                    else:
+                        print("Redeclared identifier %s" % ident)
+
+            elif tree.has_key("T_ASSIGN"):
+                # make sure this variable exists
+                ident = tree["T_ASSIGN"][0]["T_ID"]
+                if ident in self._variables:
+                    isFloat = False
+                elif ident in self._floatVariables:
+                    isFloat = True
+                else:
+                    print("Variable %s doesn't exist" % ident)
+                    self._error = True
+                    return
+
+                # process oper to assign
+                branch = self.emitAST(tree["T_ASSIGN"][1])
+
+                # branch type mus match variable type
+                if isFloat and branch["type"] != "T_FLOAT":
+                    self._error = True
+                    print("Assigning a %s type operation to float %s" % (branch["type"], ident))
+                elif not isFloat and branch["type"] == "T_FLOAT":
+                    self._error = True
+                    print("Assigning a float type operation to a non float variable %s" % ident)
+
+                # return up a new branch that stores the variable
+                if not isFloat:
+                    return {"expr": [branch, {"forth_literal": {"cmd": "%s ! " % ident}}]}
+                else:
+                    return {"expr": [branch, {"forth_literal": {"cmd": "%s f! " % ident}}]}
+
             elif tree.has_key("T_STDOUT"):
                 # get type of the expression for stdout to determine how to print the value
 
                 branch = self.emitAST(tree["T_STDOUT"])
 
-                print("here")
                 print(branch)
                 if branch[0]["expr"][0].has_key("type"):
                     t = branch[0]["expr"][0]["type"]
@@ -241,9 +291,6 @@ class TypeChecker:
         self._whileFunctions.append(fncTree)
 
         return exprName
-
-    def processLet(self, branch):
-        print(todo)
 
     # encode forth_literals that will correctly append the strings
     # TODO: fix for muliple concats
