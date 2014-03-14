@@ -297,11 +297,9 @@ class TypeChecker:
 
         exprName = "whileexpr" + str(len(self._whileFunctions))
 
-        # violating the production that an expr should only have two nodes, will still emit correctly
-        # splice in the rest of the while expression into the returned up branch
-        branch.append({"expr": [{"forth_literal": {"cmd": "dup while "}}, conditionBranch, {"forth_literal": {"cmd": "repeat ; "}}]})
+        branch.append(conditionBranch)
+        fncTree = {"T" : {"S": [{"expr": [{"forth_literal": {"cmd": ": %s begin " % exprName}}, {"expr": branch}, {"forth_literal": {"cmd": "while repeat ; "}}]}]}}
 
-        fncTree = {"T" : {"S": [{"expr": [{"forth_literal": {"cmd": ": %s begin " % exprName}}, {"expr": branch}]}]}}
         self._whileFunctions.append(fncTree)
 
         return exprName
