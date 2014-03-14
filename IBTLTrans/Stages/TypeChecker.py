@@ -163,8 +163,12 @@ class TypeChecker:
 
                 # determine if this function needs to be added in
                 if oper == "T_EXP" and not self._addedPowFnc:
-                    self._addedPowFnc = True
-                    self.addPowFnc()
+                    # make sure neither of the branches are of float types, as f** is defined for floats already
+
+                    # branch should have a length of 2 (if not, that will be caught later), but the lambda solution is more elegant than a few nested ifs
+                    if all(map(lambda v: v.get("type") == "T_INT", branch)):
+                        self._addedPowFnc = True
+                        self.addPowFnc()
 
                 # SPECIAL CASES
 
@@ -202,12 +206,10 @@ class TypeChecker:
                         branch[1] = [{"expr": [branch[1], {"forth_literal": {"cmd": "s>f "}}]}]
                         recast = True
                     elif t == "T_CONSTSTR" and t2 == "T_CONSTSTR":
-                        print("2 consts")
                         # return from here since there are multiple operators to do string concat
                         return self.processStrConcat(branch[0], branch[1])
 
                     elif (t == "T_CONSTSTR" and t2 == "T_STRING") or (t == "T_STRING" and t2 == "T_CONSTSTR"):
-                        print("const and a str")
                         return self.processStrConcat(branch[0], branch[1])
 
                     if t != t2 and not recast:
