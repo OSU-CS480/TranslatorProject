@@ -84,6 +84,7 @@ class TypeChecker:
                     else:
                         print("Redeclared identifier float %s" % ident)
                 else:
+                    # anything else goes to the variables
                     if not (ident in self._variables) and not (ident in self._floatVariables):
                         self._variables.append(ident)
                     else:
@@ -298,7 +299,7 @@ class TypeChecker:
 
         # violating the production that an expr should only have two nodes, will still emit correctly
         # splice in the rest of the while expression into the returned up branch
-        branch.append({"expr": [{"forth_literal": {"cmd": "dup while "}}, conditionBranch, {"forth_literal": {"cmd": "repeat "}}]})
+        branch.append({"expr": [{"forth_literal": {"cmd": "dup while "}}, conditionBranch, {"forth_literal": {"cmd": "repeat ; "}}]})
 
         fncTree = {"T" : {"S": [{"expr": [{"forth_literal": {"cmd": ": %s begin " % exprName}}, {"expr": branch}]}]}}
         self._whileFunctions.append(fncTree)

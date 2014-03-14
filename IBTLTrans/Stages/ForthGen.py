@@ -40,7 +40,7 @@ class ForthGen:
             self._cmds += "Variable %s\n" % var
 
         for fvar in self._floatVariables:
-            self._cmds += "fvariable %s\n" % var
+            self._cmds += "fvariable %s\n" % fvar
 
         # emit each if function
         for fnc in self._ifASTs:
