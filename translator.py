@@ -66,7 +66,10 @@ def main():
         if showTokens:
             print("Tokens:")
             for tok in toks:
-                print(tok)
+                if tok.text() != None:
+                    print("%s (%s)" % (tok, tok.text()))
+                else:
+                    print(tok)
 
         # parse input
         p = Parser(toks)
