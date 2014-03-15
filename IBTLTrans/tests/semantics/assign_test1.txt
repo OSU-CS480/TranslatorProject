@@ -1,0 +1,7 @@
+[
+	[let [[int x] [float y] [bool z] [string a]]]
+	[:= x 3]
+	[:= y 124e124]
+	[:= z false]
+	[:= a "hello"]
+]
