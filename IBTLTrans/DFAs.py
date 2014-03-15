@@ -114,13 +114,9 @@ class IntegerDFA(DFA):
         self.storeText(True)
         
         self.addState('T_INT')
-        self.addState('is_negative')
-        
-        self.addTransition('-', 'start', 'is_negative')
         
         for i in range(0, 10):
             self.addTransition(str(i), 'start', 'T_INT')
-            self.addTransition(str(i), 'is_negative', 'T_INT')
             self.addTransition(str(i), 'T_INT', 'T_INT')
 
 class KeywordDFA(DFA):
