@@ -1,0 +1,4 @@
+Variable x
+Variable c
+: whileexpr0 begin x @ -1 * x ! x @ . c @ 1 - c ! c @ 0 > while repeat ; 
+1 -1 * x ! 10 c ! whileexpr0 bye

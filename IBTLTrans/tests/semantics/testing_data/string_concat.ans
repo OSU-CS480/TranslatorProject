@@ -1,2 +1,1 @@
-Forth code:
 s" hello" pad place s" world" pad +place bye
