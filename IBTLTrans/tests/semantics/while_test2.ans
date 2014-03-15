@@ -1,0 +1,4 @@
+: whileexpr0 begin 1 . 1 0 < while repeat ; 
+: whileexpr1 begin 1 . whileexpr0 1 0 > while repeat ; 
+: whileexpr2 begin 1 . 1 0 < while repeat ; 
+whileexpr1 whileexpr2 bye
