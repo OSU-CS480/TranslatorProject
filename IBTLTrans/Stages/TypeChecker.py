@@ -206,10 +206,6 @@ class TypeChecker:
                         branch[1] = [{"expr": [branch[1], {"forth_literal": {"cmd": "s>f "}}]}]
                         recast = True
                     elif t == "T_CONSTSTR" and t2 == "T_CONSTSTR":
-                        # return from here since there are multiple operators to do string concat
-                        return self.processStrConcat(branch[0], branch[1])
-
-                    elif (t == "T_CONSTSTR" and t2 == "T_STRING") or (t == "T_STRING" and t2 == "T_CONSTSTR"):
                         return self.processStrConcat(branch[0], branch[1])
 
                     if t != t2 and not recast:
@@ -307,22 +303,8 @@ class TypeChecker:
     # encode forth_literals that will correctly append the strings
     # TODO: fix for muliple concats
     def processStrConcat(self, lBranch, rBranch):
-        if lBranch['type'] == "T_CONSTSTR":
-            newBranch = {'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}]}]}
-        else:
-            newBranch = {'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad +place '}}]}]}
-
-        newBranch['expr'][1]['expr'].append({'expr': [rBranch, {'forth_literal': {'cmd': 'pad +place '}}]})
-        return {'expr': newBranch, 'type': 'T_STRING'}
-        # newBranch = {'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}]}]}
-
-        # newBranch['expr'][1]['expr'].append({'expr': [rBranch, {'forth_literal': {'cmd': 'pad +place '}}]})
-
-        # newExpr = {'expr': newBranch, 'type': 'T_STRING'}
-        # return newExpr
-
         # working code for single concats only
-        #return {'type': 'T_STRING', 'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}, {'expr': [rBranch, {'forth_literal': {'cmd': 'pad +place '}}]}]}]}
+        return {'type': 'T_STRING', 'expr': [lBranch, {'expr': [{'forth_literal': {'cmd': 'pad place '}}, {'expr': [rBranch, {'forth_literal': {'cmd': 'pad +place '}}]}]}]}
 
     # return up a modified branch, replacing the - with an explicit mulitply by -1
     def negateToNegativeMult(self, branch):
