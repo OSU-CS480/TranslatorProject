@@ -1,0 +1,8 @@
+Variable n
+fvariable a
+fvariable b
+fvariable area
+fvariable width
+fvariable x
+: whileexpr0 begin area f@ x f@ 2 s>f f** width f@ f* f+ area f! x f@ width f@ f+ x f! x f@ b f@ f< while repeat ; 
+100 n ! 0 s>f a f! 1 s>f b f! 0 s>f area f! a f@ x f! b f@ a f@ f- n @ s>f f/ width f! whileexpr0 area f@ f. bye

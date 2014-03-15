@@ -178,7 +178,7 @@ def main():
                     print("Parser test fixture failed. %d out of %d failed" % (failCount, len(inputFiles)))
                 else:
                     print("Parser test fixture succeeded")
-        elif name == "constexprs":
+        elif name == "constexprs" or name == "semantics":
             files = glob.glob(os.sep.join([topLevelDir, testingDir, name, testDataDir, '*']))
             files.sort()
 
@@ -225,7 +225,7 @@ def main():
                 else:
                     print("Failure test cases succeeded\n")
 
-                print("Starting constant expression test fixture")
+                print("Starting %s test fixture" % name)
                 failCount = 0
                 for i in range(0, len(inputFiles)):
                     # tokenize input
@@ -241,7 +241,10 @@ def main():
                     tokens = t.tokenize()
 
                     p = Parser(tokens)
-                    p.parse()
+                    if not p.parse():
+                        print("Failed: could not parse the input")
+                        failCount += 1
+                        continue
 
                     tc = TypeChecker(p.getParseTree())
 
@@ -273,47 +276,10 @@ def main():
                                     print("Forth generated is\n%s" % forth.getForth())
                                     print("Answer file is\n%s" % answer)
 
-                            # # write this forth code in a temp file
-                            # tempForth = tempfile.NamedTemporaryFile(delete=False)
-                            # tempForth.write(forth.getForth())
-                            # tempForth.close()
-
-                            # # capture the GForth output
-                            # proc = sub.Popen(["gforth", tempForth.name], stdout=sub.PIPE, stderr=sub.PIPE)
-                            # (out, error) = proc.communicate()
-
-                            # # remove the temp file as it's no longer needed
-                            # os.unlink(tempForth.name)
-
-                            # if proc.returncode != 0:
-                            #     print("Forth returned an error value %d" % proc.returncode)
-                            #     failCount += 1
-                            # else:
-                            #     if out == None:
-                            #         out = ""
-
-                            #     if error != None and error != "" and verbose:
-                            #         print("Forth wrote: `%s' to standard error" % error)
-
-                            #     # compare to answer file
-                            #     answerFile = open(answerFiles[i], "r")
-                            #     answer = answerFile.read()
-                            #     answerFile.close()
-
-                            #     if out == answer:
-                            #         if verbose:
-                            #             print("Forth output matched what was expected")
-                            #     else:
-                            #         failCount += 1
-                            #         print("Forth output didn't match expected output")
-
-                            #         if verbose:
-                            #             print("Expected `%s'\nGot `%s'" % (answer, out))
-
                 if failCount != 0:
-                    print("Constexpr test fixture failed. %d out of %d failed" % (failCount, len(inputFiles)))
+                    print("%s test fixture failed. %d out of %d failed" % (name, failCount, len(inputFiles)))
                 else:
-                    print("Constexpr test fixture succeeded")
+                    print("%s test fixture succeeded" % name)
         else:
             print("Could not find test suite %s" % name)
 

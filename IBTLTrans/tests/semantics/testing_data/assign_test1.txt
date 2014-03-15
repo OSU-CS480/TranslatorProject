@@ -1,5 +1,5 @@
 [
-	[let [[int x] [float y] [bool z] [string a]]]
+	[let [[x int] [y float] [z bool] [a string]]]
 	[:= x 3]
 	[:= y 124e124]
 	[:= z false]
