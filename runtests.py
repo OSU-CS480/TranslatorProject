@@ -261,7 +261,13 @@ def main():
                             forth.addBye()
 
                             answerFile = open(answerFiles[i], "r")
-                            answer = answerFile.read()
+                            # forth code is emitted with unix newlines
+                            answer = answerFile.read().replace("\r\n", "\n")
+
+                            # strip off any extra newline
+                            if answer[-1:] == "\n":
+                                answer = answer[:-1]
+
                             answerFile.close()
 
                             # bye for byte comparison with generated forth code
@@ -273,8 +279,8 @@ def main():
 
                                 print("Forth code generated did not match answer file")
                                 if verbose:
-                                    print("Forth generated is\n%s" % forth.getForth())
-                                    print("Answer file is\n%s" % answer)
+                                    print("Forth generated is (length: %d)\n%s" % (len(forth.getForth()), forth.getForth()))
+                                    print("Answer file is (length: %d)\n%s" % (len(answer), answer))
 
                 if failCount != 0:
                     print("%s test fixture failed. %d out of %d failed" % (name, failCount, len(inputFiles)))
